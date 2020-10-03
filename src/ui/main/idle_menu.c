@@ -24,7 +24,7 @@ UX_STEP_NOCB(
         ux_idle_flow_1_step,
         pnn,
         {
-            &C_icon_symbol,
+            &C_icon_NEM,
             "Welcome to",
             "NEM Wallet",
         });

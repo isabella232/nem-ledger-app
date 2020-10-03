@@ -48,7 +48,7 @@ UX_STEP_VALID(
         pn,
         approval_menu_callback(OPTION_SIGN),
         {
-            &C_icon_validate,
+            &C_icon_validate_14,
             "Approve",
         });
 
