@@ -21,19 +21,26 @@
 #include "ui/main/idle_menu.h"
 #include "ui/address/address_ui.h"
 
-uint8_t nemPublicKey[NEM_PUBLIC_KEY_LENGTH];
+uint8_t nem_publickey[NEM_PUBLIC_KEY_LENGTH];
+char nem_address[NEM_PRETTY_ADDRESS_LENGTH];
 
-uint32_t set_result_get_publicKey() {
+uint32_t set_result_get_publickey() {
     uint32_t tx = 0;
+
+    //address
+    G_io_apdu_buffer[tx++] = NEM_PRETTY_ADDRESS_LENGTH;
+    memmove(G_io_apdu_buffer + tx, nem_address, NEM_PRETTY_ADDRESS_LENGTH);
+    tx += NEM_PRETTY_ADDRESS_LENGTH;
+
     //publicKey
     G_io_apdu_buffer[tx++] = NEM_PUBLIC_KEY_LENGTH;
-    os_memmove(G_io_apdu_buffer + tx, nemPublicKey, NEM_PUBLIC_KEY_LENGTH);
-    tx += 32;
+    os_memmove(G_io_apdu_buffer + tx, nem_publickey, NEM_PUBLIC_KEY_LENGTH);
+    tx += NEM_PUBLIC_KEY_LENGTH;
     return tx;
 }
 
 void on_address_confirmed() {
-    uint32_t tx = set_result_get_publicKey();
+    uint32_t tx = set_result_get_publickey();
     G_io_apdu_buffer[tx++] = 0x90;
     G_io_apdu_buffer[tx++] = 0x00;
     // Send back the response, do not restart the event loop
@@ -62,11 +69,10 @@ void handle_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer,
     cx_ecfp_private_key_t privateKey;
     cx_ecfp_public_key_t publicKey;
     uint8_t algo;
-    char address[NEM_PRETTY_ADDRESS_LENGTH+1];
     uint8_t p2Chain = p2 & 0x3F;
     UNUSED(p2Chain);
 
-    if ((bip32PathLength < 0x01) || (bip32PathLength > MAX_BIP32_PATH)) {
+    if ((bip32PathLength < 1) || (bip32PathLength > MAX_BIP32_PATH)) {
         THROW(0x6a80);
     }
     if ((p1 != P1_CONFIRM) && (p1 != P1_NON_CONFIRM)) {
@@ -80,13 +86,8 @@ void handle_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer,
         dataBuffer += 4;
     }
     uint8_t network_type = get_network_type(bip32Path);
-    if (network_type == MAINNET || network_type == TESTNET) {
-        algo = CX_KECCAK;
-    } else {
-        algo = CX_SHA3;
-    }
+    algo = get_algo(network_type);
     io_seproxyhal_io_heartbeat();
-
     BEGIN_TRY {
         TRY {
             os_perso_derive_node_bip32(CX_CURVE_256K1, bip32Path, bip32PathLength, privateKeyData, NULL);
@@ -109,9 +110,8 @@ void handle_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer,
             explicit_bzero(&privateKey, sizeof(privateKey));
             explicit_bzero(privateKeyData, sizeof(privateKeyData));
             io_seproxyhal_io_heartbeat();
-            nem_public_key_and_address(&publicKey, network_type, algo, (uint8_t*) &nemPublicKey, (char*) &address, NEM_PRETTY_ADDRESS_LENGTH + 1);
+            nem_public_key_and_address(&publicKey, network_type, algo, (uint8_t*) &nem_publickey, (char*) &nem_address, NEM_PRETTY_ADDRESS_LENGTH);
             io_seproxyhal_io_heartbeat();
-            address[NEM_PRETTY_ADDRESS_LENGTH] = '\0';
         }
         CATCH_OTHER(e) {
             THROW(e);
@@ -124,16 +124,14 @@ void handle_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer,
     END_TRY
 
     if (p1 == P1_NON_CONFIRM) {
-        *tx = set_result_get_publicKey();
+        *tx = set_result_get_publickey();
         THROW(0x9000);
-    }
-    else {
+    } else {
         display_address_confirmation_ui(
-                address,
+                nem_address,
                 on_address_confirmed,
                 on_address_rejected
         );
-
         *flags |= IO_ASYNCH_REPLY;
     }
 }

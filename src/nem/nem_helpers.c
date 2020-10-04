@@ -32,6 +32,14 @@ uint8_t get_network_type(const uint32_t bip32Path[]) {
     }
 }
 
+uint8_t get_algo(uint8_t network_type) {
+    if (network_type == MAINNET || network_type == TESTNET) {
+        return CX_KECCAK;
+    } else {
+        return CX_SHA3;
+    }
+}
+
 void nem_print_amount(uint64_t amount, uint8_t divisibility, char *asset, char *out) {
     char buffer[AMOUNT_MAX_SIZE];
     uint64_t dVal = amount;

@@ -56,6 +56,7 @@
 #define MINJIN_NETWORK_VERSION 0x60000001
 
 uint8_t get_network_type(const uint32_t bip32Path[]);
+uint8_t get_algo(uint8_t network_type);
 void nem_print_amount(uint64_t amount, uint8_t divisibility, char *asset, char *out);
 void nem_public_key_and_address(cx_ecfp_public_key_t *inPublicKey, uint8_t inNetworkId, unsigned int inAlgo, uint8_t *outPublicKey, char *outAddress, uint8_t outLen);
 

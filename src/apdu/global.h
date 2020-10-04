@@ -31,12 +31,12 @@ typedef enum {
 } sign_state_e;
 
 typedef struct {
+    uint8_t network_type;
+    uint8_t algo;
     uint8_t pathLength;
     uint32_t bip32Path[MAX_BIP32_PATH];
     uint8_t rawTx[MAX_RAW_TX];
     uint32_t rawTxLength;
-    uint8_t network_type;
-    uint8_t algo;
 } transaction_context_t;
 
 extern transaction_context_t transactionContext;
