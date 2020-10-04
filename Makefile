@@ -21,7 +21,7 @@ endif
 include $(BOLOS_SDK)/Makefile.defines
 
 #  43	0x8000002b	XEM	NEM
-APPNAME = NEM 
+APPNAME = NEM
 APP_LOAD_PARAMS = --tlvraw 9F:01
 APP_LOAD_PARAMS +=--appFlags 0x40 --path "44'/43'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
 
@@ -66,8 +66,6 @@ DEFINES   += U2F_PROXY_MAGIC=\"NEM\"
 #WEBUSB_URL     	= www.ledgerwallet.com
 #DEFINES       	+= HAVE_WEBUSB WEBUSB_URL_SIZE_B=$(shell echo -n $(WEBUSB_URL) | wc -c) WEBUSB_URL=$(shell echo -n $(WEBUSB_URL) | sed -e "s/./\\\'\0\\\',/g")
 DEFINES   += HAVE_WEBUSB WEBUSB_URL_SIZE_B=0 WEBUSB_URL=""
-
-# DEFINES   += CX_COMPLIANCE_141
 
 ##############
 #  Compiler  #

@@ -41,12 +41,22 @@
 #define NEM_MOSAIC_ID 0x5E62990DCAC5BE8A
 #define AMOUNT_MAX_SIZE 17
 #define NEM_ADDRESS_LENGTH 24
-#define NEM_PRETTY_ADDRESS_LENGTH 39
+#define NEM_PRETTY_ADDRESS_LENGTH 40
 #define NEM_PUBLIC_KEY_LENGTH 32
 #define NEM_PRIVATE_KEY_LENGTH 32
 #define NEM_TRANSACTION_HASH_LENGTH 32
 
+#define TESTNET 152
+#define MAINNET 104
+#define MIJIN_MAINNET 96
+#define MIJIN_TESTNET 144
+
+#define MAIN_NETWORK_VERSION 0x68000001
+#define TEST_NETWORK_VERSION 0x98000001
+#define MINJIN_NETWORK_VERSION 0x60000001
+
+uint8_t get_network_type(const uint32_t bip32Path[]);
 void nem_print_amount(uint64_t amount, uint8_t divisibility, char *asset, char *out);
-void nem_public_key_and_address(cx_ecfp_public_key_t *inPublicKey, uint8_t inNetworkId, unsigned int inAlgo, uint8_t *outPublicKey, char *outAddress);
+void nem_public_key_and_address(cx_ecfp_public_key_t *inPublicKey, uint8_t inNetworkId, unsigned int inAlgo, uint8_t *outPublicKey, char *outAddress, uint8_t outLen);
 
 #endif //LEDGER_APP_NEM_NEMHELPERS_H

@@ -28,18 +28,19 @@ typedef enum {
     IDLE,
     WAITING_FOR_MORE,
     PENDING_REVIEW,
-} signState_e;
+} sign_state_e;
 
-typedef struct transactionContext_t {
+typedef struct {
     uint8_t pathLength;
     uint32_t bip32Path[MAX_BIP32_PATH];
     uint8_t rawTx[MAX_RAW_TX];
     uint32_t rawTxLength;
-    cx_curve_t curve;
-} transactionContext_t;
+    uint8_t network_type;
+    uint8_t algo;
+} transaction_context_t;
 
-extern transactionContext_t transactionContext;
-extern signState_e signState;
+extern transaction_context_t transactionContext;
+extern sign_state_e signState;
 
 void reset_transaction_context();
 

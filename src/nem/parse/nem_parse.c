@@ -106,11 +106,11 @@ typedef struct {
     uint16_t transactionType;
 } common_header_t;
 
-bool has_data(parseContext_t *context, uint32_t numBytes) {
+bool has_data(parse_context_t *context, uint32_t numBytes) {
     return context->offset + numBytes - 1 < context->length;
 }
 
-field_t *get_field(parseContext_t *context, int idx) {
+field_t *get_field(parse_context_t *context, int idx) {
     return &context->result.fields[idx];
 }
 
@@ -122,15 +122,15 @@ field_t* _set_field_data(field_t* field, uint8_t id, uint8_t data_type, uint16_t
     return field;
 }
 
-field_t* set_field_data(parseContext_t *context, int idx, uint8_t id, uint8_t data_type, uint16_t length, uint8_t* data) {
+field_t* set_field_data(parse_context_t *context, int idx, uint8_t id, uint8_t data_type, uint16_t length, uint8_t* data) {
     return _set_field_data(get_field(context, idx), id, data_type, length, data);
 }
 
-field_t *add_new_field(parseContext_t *context, uint8_t id, uint8_t data_type, uint16_t length, uint8_t* data) {
+field_t *add_new_field(parse_context_t *context, uint8_t id, uint8_t data_type, uint16_t length, uint8_t* data) {
     return set_field_data(context, context->result.numFields++, id, data_type, length, data);
 }
 
-uint8_t* read_data(parseContext_t *context, uint32_t numBytes) {
+uint8_t* read_data(parse_context_t *context, uint32_t numBytes) {
     if (has_data(context, numBytes)) {
         uint32_t offset = context->offset;
         context->offset += numBytes;
@@ -140,7 +140,7 @@ uint8_t* read_data(parseContext_t *context, uint32_t numBytes) {
     }
 }
 
-void advance_position(parseContext_t *context, uint32_t numBytes) {
+void advance_position(parse_context_t *context, uint32_t numBytes) {
     if (has_data(context, numBytes)) {
         context->offset += numBytes;
     } else {
@@ -148,7 +148,7 @@ void advance_position(parseContext_t *context, uint32_t numBytes) {
     }
 }
 
-void parse_transfer_txn_content(parseContext_t *context, bool isMultisig) {
+void parse_transfer_txn_content(parse_context_t *context, bool isMultisig) {
     // get header first
     txn_fee_t *fee = NULL;
     if (!isMultisig) {
@@ -178,7 +178,7 @@ void parse_transfer_txn_content(parseContext_t *context, bool isMultisig) {
     }
 }
 
-void parse_mosaic_definition_txn_content(parseContext_t *context, bool isMultisig) {
+void parse_mosaic_definition_txn_content(parse_context_t *context, bool isMultisig) {
     // get header first
     txn_fee_t *fee = NULL;
     if (!isMultisig) {
@@ -197,7 +197,7 @@ void parse_mosaic_definition_txn_content(parseContext_t *context, bool isMultisi
     add_new_field(context, NEM_UINT8_MD_RESTRICT_FLAG, STI_UINT8, sizeof(uint8_t), (uint8_t*) &txn->flags);
 }
 
-void parse_mosaic_supply_change_txn_content(parseContext_t *context, bool isMultisig) {
+void parse_mosaic_supply_change_txn_content(parse_context_t *context, bool isMultisig) {
     // get header first
     txn_fee_t *fee = NULL;
     if (!isMultisig) {
@@ -212,7 +212,7 @@ void parse_mosaic_supply_change_txn_content(parseContext_t *context, bool isMult
     add_new_field(context, NEM_UINT64_MSC_AMOUNT, STI_UINT64, sizeof(mosaic_t), (uint8_t*) &txn->mosaic.amount);
 }
 
-void parse_multisig_account_modification_txn_content(parseContext_t *context, bool isMultisig) {
+void parse_multisig_account_modification_txn_content(parse_context_t *context, bool isMultisig) {
     // get header first
     txn_fee_t *fee = NULL;
     if (!isMultisig) {
@@ -237,7 +237,7 @@ void parse_multisig_account_modification_txn_content(parseContext_t *context, bo
     }
 }
 
-void parse_namespace_registration_txn_content(parseContext_t *context, bool isMultisig) {
+void parse_namespace_registration_txn_content(parse_context_t *context, bool isMultisig) {
     // get header first
     txn_fee_t *fee = NULL;
     if (!isMultisig) {
@@ -261,7 +261,7 @@ void parse_namespace_registration_txn_content(parseContext_t *context, bool isMu
     }
 }
 
-void parse_address_alias_txn_content(parseContext_t *context, bool isMultisig) {
+void parse_address_alias_txn_content(parse_context_t *context, bool isMultisig) {
     // get header first
     txn_fee_t *fee = NULL;
     if (!isMultisig) {
@@ -280,7 +280,7 @@ void parse_address_alias_txn_content(parseContext_t *context, bool isMultisig) {
     }
 }
 
-void parse_mosaic_alias_txn_content(parseContext_t *context, bool isMultisig) {
+void parse_mosaic_alias_txn_content(parse_context_t *context, bool isMultisig) {
     // get header first
     txn_fee_t *fee = NULL;
     if (!isMultisig) {
@@ -299,7 +299,7 @@ void parse_mosaic_alias_txn_content(parseContext_t *context, bool isMultisig) {
     }
 }
 
-void parse_hash_lock_txn_content(parseContext_t *context, bool isMultisig) {
+void parse_hash_lock_txn_content(parse_context_t *context, bool isMultisig) {
     // get header first
     txn_fee_t *fee = NULL;
     if (!isMultisig) {
@@ -318,7 +318,7 @@ void parse_hash_lock_txn_content(parseContext_t *context, bool isMultisig) {
     }
 }
 
-void parse_inner_txn_content(parseContext_t *context, uint32_t len) {
+void parse_inner_txn_content(parse_context_t *context, uint32_t len) {
     uint32_t totalSize = 0;
     do {
         // get header first
@@ -360,7 +360,7 @@ void parse_inner_txn_content(parseContext_t *context, uint32_t len) {
     } while (totalSize < len-5);
 }
 
-void parse_aggregate_txn_content(parseContext_t *context) {
+void parse_aggregate_txn_content(parse_context_t *context) {
     // get header first
     txn_fee_t *fee = (txn_fee_t*) read_data(context, sizeof(txn_fee_t));
     aggregate_txn_t *txn = (aggregate_txn_t*) read_data(context, AGGREGATE_TXN_LENGTH);
@@ -375,7 +375,7 @@ void parse_aggregate_txn_content(parseContext_t *context) {
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &fee->maxFee);
 }
 
-void parse_txn_detail(parseContext_t *context, common_header_t *txn) {
+void parse_txn_detail(parse_context_t *context, common_header_t *txn) {
     context->result.numFields = 0;
     // Show Transaction type
     add_new_field(context, NEM_UINT16_TRANSACTION_TYPE, STI_UINT16, sizeof(uint16_t), (uint8_t*) &context->transactionType);
@@ -417,7 +417,7 @@ void parse_txn_detail(parseContext_t *context, common_header_t *txn) {
     }
 }
 
-void set_sign_data_length(parseContext_t *context) {
+void set_sign_data_length(parse_context_t *context) {
     if ((context->transactionType == NEM_TXN_AGGREGATE_COMPLETE) || (context->transactionType == NEM_TXN_AGGREGATE_BONDED)) {
         const unsigned char TESTNET_GENERATION_HASH[] = {0x1D, 0xFB, 0x2F, 0xAA, 0x9E, 0x7F, 0x05, 0x41,
                                                         0x68, 0xB0, 0xC5, 0xFC, 0xB8, 0x4F, 0x4D, 0xEB,
@@ -437,7 +437,7 @@ void set_sign_data_length(parseContext_t *context) {
     }
 }
 
-common_header_t *parse_txn_header(parseContext_t *context) {
+common_header_t *parse_txn_header(parse_context_t *context) {
     uint32_t length = sizeof(common_header_t);
     // get gen_hash and transaction_type
     common_header_t *txn = (common_header_t *) read_data(context, length);
@@ -445,13 +445,13 @@ common_header_t *parse_txn_header(parseContext_t *context) {
     return txn;
 }
 
-void parse_txn_internal(parseContext_t *context) {
+void parse_txn_internal(parse_context_t *context) {
     common_header_t* txn = parse_txn_header(context);
     parse_txn_detail(context, txn);
     set_sign_data_length(context);
 }
 
-void parse_txn_context(parseContext_t *context) {
+void parse_txn_context(parse_context_t *context) {
     BEGIN_TRY {
         TRY {
             parse_txn_internal(context);

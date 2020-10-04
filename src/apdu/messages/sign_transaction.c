@@ -24,7 +24,7 @@
 
 #define PREFIX_LENGTH   4
 
-parseContext_t parseContext;
+parse_context_t parseContext;
 
 void handle_packet_content(uint8_t p1, uint8_t p2, uint8_t *workBuffer,
                          uint8_t dataLength, volatile unsigned int *flags);
@@ -49,15 +49,26 @@ void sign_transaction() {
     BEGIN_TRY {
         TRY {
             io_seproxyhal_io_heartbeat();
-            os_perso_derive_node_bip32(
-                    CX_CURVE_256K1, transactionContext.bip32Path,
-                    transactionContext.pathLength, privateKeyData, NULL);
-            cx_ecfp_init_private_key(transactionContext.curve, privateKeyData, NEM_PRIVATE_KEY_LENGTH, &privateKey);
+            os_perso_derive_node_bip32(CX_CURVE_256K1, transactionContext.bip32Path, transactionContext.pathLength, privateKeyData, NULL);
+            if (transactionContext.algo == CX_SHA3) {
+                cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, NEM_PRIVATE_KEY_LENGTH, &privateKey);
+            } else if (transactionContext.algo == CX_KECCAK) {
+                //reverse privateKey
+                uint8_t privateKeyDataR[NEM_PRIVATE_KEY_LENGTH];
+                uint8_t j;
+                for (j=0; j<NEM_PRIVATE_KEY_LENGTH; j++) {
+                    privateKeyDataR[j] = privateKeyData[NEM_PRIVATE_KEY_LENGTH - 1 - j];
+                }
+                cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyDataR, NEM_PRIVATE_KEY_LENGTH, &privateKey);
+                explicit_bzero(privateKeyDataR, sizeof(privateKeyDataR));
+            } else {
+                THROW(0x6a80);
+            }
             explicit_bzero(privateKeyData, sizeof(privateKeyData));
             io_seproxyhal_io_heartbeat();
             tx = (uint32_t) cx_eddsa_sign(&privateKey, CX_LAST, CX_SHA512, transactionContext.rawTx,
                                               transactionContext.rawTxLength, NULL, 0, G_io_apdu_buffer,
-                                              NULL);
+                                              IO_APDU_BUFFER_SIZE, NULL);
 
         }
         CATCH_OTHER(e) {
@@ -135,13 +146,12 @@ void handle_first_packet(uint8_t p1, uint8_t p2, uint8_t *workBuffer,
         workBuffer += 4;
         dataLength -= 4;
     }
-    if (((p2 & P2_SECP256K1) == 0) && ((p2 & P2_ED25519) == 0)) {
-        THROW(0x6B00);
+    transactionContext.network_type = get_network_type(transactionContext.bip32Path);
+    if (transactionContext.network_type == MAINNET || transactionContext.network_type == TESTNET) {
+        transactionContext.algo = CX_KECCAK;
+    } else {
+        transactionContext.algo = CX_SHA3;
     }
-    if (((p2 & P2_SECP256K1) != 0) && ((p2 & P2_ED25519) != 0)) {
-        THROW(0x6B00);
-    }
-    transactionContext.curve = (((p2 & P2_ED25519) != 0) ? CX_CURVE_Ed25519 : CX_CURVE_256K1);
     handle_packet_content(p1, p2, workBuffer, dataLength, flags);
 }
 

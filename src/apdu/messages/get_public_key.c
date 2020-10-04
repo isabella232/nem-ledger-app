@@ -61,9 +61,7 @@ void handle_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer,
     uint8_t bip32PathLength = *(dataBuffer++);
     cx_ecfp_private_key_t privateKey;
     cx_ecfp_public_key_t publicKey;
-    uint8_t networkId = 0x98;
     uint8_t algo;
-    cx_curve_t curve;
     char address[NEM_PRETTY_ADDRESS_LENGTH+1];
     uint8_t p2Chain = p2 & 0x3F;
     UNUSED(p2Chain);
@@ -74,13 +72,6 @@ void handle_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer,
     if ((p1 != P1_CONFIRM) && (p1 != P1_NON_CONFIRM)) {
         THROW(0x6B00);
     }
-    if (((p2 & P2_SECP256K1) == 0) && ((p2 & P2_ED25519) == 0)) {
-        THROW(0x6B00);
-    }
-    if (((p2 & P2_SECP256K1) != 0) && ((p2 & P2_ED25519) != 0)) {
-        THROW(0x6B00);
-    }
-    curve = (((p2 & P2_ED25519) != 0) ? CX_CURVE_Ed25519 : CX_CURVE_256K1);
 
     //Read and convert path's data
     for (i = 0; i < bip32PathLength; i++) {
@@ -88,28 +79,37 @@ void handle_public_key(uint8_t p1, uint8_t p2, uint8_t *dataBuffer,
                        (dataBuffer[2] << 8) | (dataBuffer[3]);
         dataBuffer += 4;
     }
+    uint8_t network_type = get_network_type(bip32Path);
+    if (network_type == MAINNET || network_type == TESTNET) {
+        algo = CX_KECCAK;
+    } else {
+        algo = CX_SHA3;
+    }
     io_seproxyhal_io_heartbeat();
 
     BEGIN_TRY {
         TRY {
-            algo = CX_SHA512;
             os_perso_derive_node_bip32(CX_CURVE_256K1, bip32Path, bip32PathLength, privateKeyData, NULL);
-            cx_ecfp_init_private_key(curve, privateKeyData, NEM_PRIVATE_KEY_LENGTH, &privateKey);
+            if (algo == CX_SHA3) {
+                cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, NEM_PRIVATE_KEY_LENGTH, &privateKey);
+            } else if (algo == CX_KECCAK) {
+                //reverse privateKey
+                uint8_t privateKeyDataR[NEM_PRIVATE_KEY_LENGTH];
+                uint8_t j;
+                for (j=0; j<NEM_PRIVATE_KEY_LENGTH; j++) {
+                    privateKeyDataR[j] = privateKeyData[NEM_PRIVATE_KEY_LENGTH - 1 - j];
+                }
+                cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyDataR, NEM_PRIVATE_KEY_LENGTH, &privateKey);
+                explicit_bzero(privateKeyDataR, sizeof(privateKeyDataR));
+            } else {
+                THROW(0x6a80);
+            }
             io_seproxyhal_io_heartbeat();
-            cx_ecfp_generate_pair2(curve,
-                                    &publicKey,
-                                    &privateKey,
-                                    1,
-                                    algo);
+            cx_ecfp_generate_pair2(CX_CURVE_Ed25519, &publicKey, &privateKey, 1, algo);
             explicit_bzero(&privateKey, sizeof(privateKey));
             explicit_bzero(privateKeyData, sizeof(privateKeyData));
             io_seproxyhal_io_heartbeat();
-            nem_public_key_and_address(&publicKey,
-                                          networkId,
-                                          algo,
-                                          (uint8_t*) &nemPublicKey,
-                                          (char*) &address
-                                          );
+            nem_public_key_and_address(&publicKey, network_type, algo, (uint8_t*) &nemPublicKey, (char*) &address, NEM_PRETTY_ADDRESS_LENGTH + 1);
             io_seproxyhal_io_heartbeat();
             address[NEM_PRETTY_ADDRESS_LENGTH] = '\0';
         }
