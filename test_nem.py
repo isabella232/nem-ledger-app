@@ -30,18 +30,26 @@ bipp32_path = (
     + "%s"
     + "80000000"
     + "80000000")
-bipp32_path_len = "1505"
 
 apdu = "E0020180"
 dongle = getDongle(True)
 
-def verify_address(network_type):
-    network = hex(0x80000000 | network_type).lstrip("0x")
-    bipp32 = bipp32_path % (network)
-    print("bipp32_path: " + bipp32)
-    result = dongle.exchange(bytes(bytearray.fromhex(apdu + bipp32_path_len + bipp32)))
+def get_network_bipp32(network_type):
+    return hex(0x80000000 | network_type).lstrip("0x")
+
+def get_bipp32_path(network_type):
+    return bipp32_path % (get_network_bipp32(network_type))
+
+def send_package(data):
+    result = dongle.exchange(data)
     print("Result len: " + str(len(result)))
-    print("Address respond       [" + str(result[0]) + "] " + result[1:41].decode())
-    print("PublicKey respond       [" + str(result[41]) + "] " + result[42:74].hex().upper())
+    return result
+
+def verify_address(network_type):
+    bipp32_path_len = "1505"
+    bipp32 = get_bipp32_path(network_type)
+    result = send_package(bytes(bytearray.fromhex(apdu + bipp32_path_len + bipp32)))
+    print("Address respond     [" + str(result[0]) + "] " + result[1:41].decode())
+    print("PublicKey respond   [" + str(result[41]) + "] " + result[42:74].hex().upper())
 
 verify_address(TESTNET)
