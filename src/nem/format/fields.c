@@ -28,8 +28,8 @@ void resolve_fieldname(field_t *field, char* dst) {
 
     if (field->dataType == STI_UINT16) {
         switch (field->id) {
-            CASE_FIELDNAME(NEM_UINT16_TRANSACTION_TYPE, "Transaction Type")
-            CASE_FIELDNAME(NEM_UINT16_INNER_TRANSACTION_TYPE, "Inner TX Type")
+            CASE_FIELDNAME(NEM_UINT32_TRANSACTION_TYPE, "Transaction Type")
+            CASE_FIELDNAME(NEM_UINT32_INNER_TRANSACTION_TYPE, "Inner TX Type")
         }
     }
 
@@ -74,8 +74,8 @@ void resolve_fieldname(field_t *field, char* dst) {
 
     if (field->dataType == STI_MOSAIC_CURRENCY) {
         switch (field->id) {
-            CASE_FIELDNAME(NEM_MOSAICT_AMOUNT, "Amount")
-            CASE_FIELDNAME(NEM_MOSAICT_HL_QUANTITY, "Lock Quantity")
+            CASE_FIELDNAME(NEM_MOSAIC_AMOUNT, "Amount")
+            CASE_FIELDNAME(NEM_MOSAIC_HL_QUANTITY, "Lock Quantity")
         }
     }
 
@@ -93,7 +93,8 @@ void resolve_fieldname(field_t *field, char* dst) {
 
     if (field->dataType == STI_STR) {
         switch (field->id) {
-            CASE_FIELDNAME(NEM_STR_NAMESPACE, "Name")
+            CASE_FIELDNAME(NEM_STR_NAMESPACE, "Namespace ID")
+            CASE_FIELDNAME(NEM_STR_MOSAIC, "Mosaic name")
         }
     }
 

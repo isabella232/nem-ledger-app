@@ -143,7 +143,7 @@ void address_formatter(field_t* field, char *dst) {
 void mosaic_formatter(field_t* field, char *dst) {
     if (field->dataType == STI_MOSAIC_CURRENCY) {
         mosaic_t* value = (mosaic_t *)field->data;
-        if (value->mosaicId == NEM_MOSAIC_ID || field->id == NEM_MOSAICT_HL_QUANTITY) {
+        if (value->mosaicId == NEM_MOSAIC_ID || field->id == NEM_MOSAIC_HL_QUANTITY) {
             nem_print_amount(value->amount, 6, "NEM", dst);
         } else {
             sprintf_mosaic(dst, MAX_FIELD_LEN, value, "micro");

@@ -20,6 +20,14 @@
 #include "limitations.h"
 #include "nem/format/fields.h"
 
+#define MESSAGE_HEADER_LENGTH                8
+typedef struct {
+    uint32_t messageType;
+    uint32_t payloadLength;
+} message_header_t;
+
+
+
 typedef struct {
     uint64_t mosaicId;
     uint64_t amount;
@@ -36,6 +44,7 @@ typedef struct {
 } result_t;
 
 typedef struct {
+    uint8_t version;
     uint16_t transactionType;
     uint8_t *data;
     result_t result;
