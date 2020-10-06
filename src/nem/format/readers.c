@@ -68,14 +68,14 @@ void sprintf_ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength
 }
 
 void sprintf_mosaic(char *dst, uint16_t maxLen, mosaic_t *mosaic, char *asset) {
-    sprintf_number(dst, maxLen, mosaic->amount);
-    strcat(dst, " ");
-    strcat(dst, asset);
-    strcat(dst, " 0x");
-    uint16_t len = strlen(dst);
-    uint8_t* mosaicId = (uint8_t*) &mosaic->mosaicId;
-    char* mosaicHex = dst + len;
-    sprintf_hex(mosaicHex, maxLen - len, mosaicId, sizeof(uint64_t), 1);
+    // sprintf_number(dst, maxLen, mosaic->amount);
+    // strcat(dst, " ");
+    // strcat(dst, asset);
+    // strcat(dst, " 0x");
+    // uint16_t len = strlen(dst);
+    // uint8_t* mosaicId = (uint8_t*) &mosaic->mosaicId;
+    // char* mosaicHex = dst + len;
+    // sprintf_hex(mosaicHex, maxLen - len, mosaicId, sizeof(uint64_t), 1);
 }
 
 uint64_t read_uint64(uint8_t *src) {

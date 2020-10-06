@@ -20,18 +20,24 @@
 #include "limitations.h"
 #include "nem/format/fields.h"
 
-#define MESSAGE_HEADER_LENGTH                8
+#define PAYLOAD_HEADER_LENGTH                8
 typedef struct {
-    uint32_t messageType;
+    uint32_t payloadType;
     uint32_t payloadLength;
-} message_header_t;
+} payload_header_t;
 
 
-
+#define MOSAIC_HEADER_LENGTH                 12
 typedef struct {
-    uint64_t mosaicId;
-    uint64_t amount;
+    uint32_t structureLength;
+    uint32_t idStructureLength;
+    uint32_t namespaceIdLength;
 } mosaic_t;
+
+#define DATA_UINT32_HEADER_LENGTH            4
+typedef struct {
+    uint32_t data32;
+} data_uint32_t;
 
 typedef struct {
     uint64_t maxFee;
