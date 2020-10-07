@@ -26,6 +26,37 @@ typedef struct {
     uint32_t messageLength;
 } transfer_txn_header_t;
 
+#define IMPORTANCE_TRANSFER_TXN_HEADER_LENGTH 40
+typedef struct {
+    uint32_t importanceMode;
+    uint32_t publicKeyLength;
+    uint8_t publicKey[32];
+} importance_tranfer_header_t;
+
+#define AGGREGATE_MODIFICATION_HEADER_LENGTH    44
+typedef struct {
+    uint32_t cosignatoryModificationLength;
+    uint32_t modicationType;
+    uint32_t cosignatoryPublicKeyLength;
+    uint8_t cosignatoryPublicKey[32];
+} aggregate_modication_header_t;
+
+#define MULTISIG_SIGNATURE_HEADER_LENGTH        84
+
+typedef struct {
+    uint32_t hashObjectLength;
+    uint32_t hashLength;
+    uint8_t hash[32];
+    uint32_t addressLength;
+    uint8_t address[40];
+} multsig_signature_header_t;
+
+#define COSIGNATORIES_MODIFICATION_HEADER_LENGTH  8
+typedef struct {
+    uint32_t minCosignatoriesModification;
+    uint32_t relativeChange;
+} cosignatories_modification_header_t;
+
 #define PROVISION_NAMESPACE_HEADER_LENGTH    56
 typedef struct {
     uint32_t sinkAddressLength;
@@ -36,14 +67,14 @@ typedef struct {
 
 
 
-#define MOSAIC_DEFINITION_DATA_LENGTH           22
+#define MOSAIC_DEFINITION_CREATION_HEADER_LENGTH    48
 typedef struct {
-    uint64_t mosaicId;
-    uint64_t duration;
-    uint32_t nonce;
-    uint8_t flags;
-    uint8_t divisibility;
-} mosaic_definition_data_t;
+    uint32_t definitionStructureLength;
+    uint32_t publicKeyLenght;
+    uint8_t publicKey[32];
+    uint32_t idStructureLength;
+    uint32_t namespaceIdLength;
+} mosaic_definition_creation_t;
 
 
 #define INNER_TX_HEADER_LENGTH      48
@@ -57,34 +88,7 @@ typedef struct {
     uint16_t innerTxType;
 } inner_tx_header_t;
 
-#define AGGREGATE_TXN_LENGTH        40
-typedef struct {
-    uint8_t transactionHash[NEM_TRANSACTION_HASH_LENGTH];
-    uint32_t payloadSize;
-    uint32_t reserse;
-} aggregate_txn_t;
 
-#define NS_REGISTRATION_HEADER_LENGTH 18
-typedef struct {
-    uint64_t duration;
-    uint64_t namespaceId;
-    uint8_t registrationType;
-    uint8_t nameSize;
-} ns_header_t;
-
-#define ADDRESS_ALIAS_HEADER_LENGTH 33
-typedef struct {
-    uint64_t namespaceId;
-    uint8_t address[NEM_ADDRESS_LENGTH];
-    uint8_t aliasAction;
-} aa_header_t;
-
-#define MOSAIC_ALIAS_HEADER_LENGTH  17
-typedef struct {
-    uint64_t namespaceId;
-    uint64_t mosaicId;
-    uint8_t aliasAction;
-} ma_header_t;
 
 #define MUTLISIG_ACCOUNT_HEADER_LENGTH 8
 typedef struct {
@@ -95,6 +99,7 @@ typedef struct {
     uint32_t reserve;
 } multisig_account_t;
 
+#define COMMON_TX_HEADER_LENGTH             64
 typedef struct {
     uint32_t transactionType;
     uint32_t version;
@@ -187,27 +192,24 @@ void parse_transfer_txn_content(parse_context_t *context, common_transaction_par
 
 }
 
-void parse_mosaic_definition_txn_content(parse_context_t *context, bool isMultisig) {
-    // get header first
-    txn_fee_t *fee = NULL;
-    if (!isMultisig) {
-        fee = (txn_fee_t*) read_data(context, sizeof(txn_fee_t));
-    }
-    mosaic_definition_data_t *txn = (mosaic_definition_data_t*) read_data(context, MOSAIC_DEFINITION_DATA_LENGTH);
-    // Show mosaic id
-    add_new_field(context, NEM_UINT64_MOSAIC_ID, STI_UINT64, sizeof(uint64_t), (uint8_t*) &txn->mosaicId);
-    // Show duration
-    add_new_field(context, NEM_UINT64_DURATION, STI_UINT64, sizeof(uint64_t), (uint8_t*) &txn->duration);
-    // Show mosaic flag (Supply change)
-    add_new_field(context, NEM_UINT8_MD_SUPPLY_FLAG, STI_UINT8, sizeof(uint8_t), (uint8_t*) &txn->flags);
-    // Show mosaic flag (Transferable)
-    add_new_field(context, NEM_UINT8_MD_TRANS_FLAG, STI_UINT8, sizeof(uint8_t), (uint8_t*) &txn->flags);
-    // Show mosaic flag (Restriction)
-    add_new_field(context, NEM_UINT8_MD_RESTRICT_FLAG, STI_UINT8, sizeof(uint8_t), (uint8_t*) &txn->flags);
+void parse_importance_tranfer_txn_content(parse_context_t *context, common_transaction_part_t *common_tx_part) {
+    importance_tranfer_header_t *txn = (importance_tranfer_header_t*) read_data(context, IMPORTANCE_TRANSFER_TXN_HEADER_LENGTH);
+    //  Show importance transfer mode
+    add_new_field(context, NEM_UINT8_AA_TYPE, STI_UINT8, sizeof(uint8_t), (uint8_t*) &txn->importanceMode);
+    // Show public key of remote account
+    add_new_field(context, NEM_HASH256_AGG_HASH, STI_HASH256, NEM_PUBLIC_KEY_LENGTH, (uint8_t*) &txn->publicKey);
+    // Show fee
+    add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_tx_part->fee);
 }
 
-void parse_multisig_account_modification_txn_content(parse_context_t *context, common_transaction_part_t *common_tx_part) {
-    multisig_account_t *txn = (multisig_account_t*) read_data(context, MUTLISIG_ACCOUNT_HEADER_LENGTH);
+void parse_aggregate_modification_txn_content(parse_context_t *context, common_transaction_part_t *common_tx_part) {
+    uint32_t cosignatoriesModificationNum = read_uint32(read_data(context, sizeof(uint32_t)));
+    // todo
+    // Add number of cosignatory modification
+    for (uint32_t i = 0; i < cosignatoriesModificationNum; i++) {
+        aggregate_modication_header_t *txn = (aggregate_modication_header_t*) read_data(context, AGGREGATE_MODIFICATION_HEADER_LENGTH);
+
+    }
     // Show min removal delta
     add_new_field(context, NEM_INT8_MAM_REMOVAL_DELTA, STI_INT8, sizeof(int8_t), (uint8_t*) &txn->minRemovalDelta);
     // Show min approval delta
@@ -225,6 +227,43 @@ void parse_multisig_account_modification_txn_content(parse_context_t *context, c
         add_new_field(context, NEM_STR_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, read_data(context, NEM_ADDRESS_LENGTH));
     }
 }
+
+void parse_multisig_signature_txn_context(parse_context_t *context, common_transaction_part_t *common_tx_part) {
+    multsig_signature_header_t *txn = (multsig_signature_header_t*) read_data(context, MULTISIG_SIGNATURE_HEADER_LENGTH);
+    // Show fee
+    add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_tx_part->fee)
+}
+
+void parse_inner_txn_content(parseContext_t *context, uint32_t len) {
+    uint32_t totalSize = 0;
+    do {
+        // get header first
+        inner_tx_header_t *txn = (inner_tx_header_t*) read_data(context, INNER_TX_HEADER_LENGTH);
+        totalSize += txn->size + 2;
+        // Show Transaction type
+        add_new_field(context, NEM_UINT32_INNER_TRANSACTION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &txn->innerTxType);
+        switch (txn->innerTxType) {
+            case NEM_TXN_TRANSFER:
+                parse_transfer_txn_content(context, true);
+                break;
+            default:
+                break;
+        }
+        if (totalSize < len-5) {
+            advance_position(context, 2);
+        }
+    } while (totalSize < len-5);
+}
+
+void parse_multisig_txn_context(parse_context_t *context, common_transaction_part_t *common_tx_part) {
+    uint32_t innerTxnLength = read_uint32(read_data(context, sizeof(uint32_t)));
+    if (has_data(context, innerTxnLength)) {
+        parse_inner_txn_content(context, innerTxnLength);
+    } else {
+        THROW(EXCEPTION_OVERFLOW);
+    }
+}
+
 
 void parse_provision_namespace_txn_content(parse_context_t *context, common_transaction_part_t *common_tx_part) {
     for (uint8_t i = 0; i<20; i++) {
@@ -247,58 +286,32 @@ void parse_provision_namespace_txn_content(parse_context_t *context, common_tran
 
 }
 
-void parse_address_alias_txn_content(parse_context_t *context, bool isMultisig) {
-    // get header first
-    txn_fee_t *fee = NULL;
-    if (!isMultisig) {
-        fee = (txn_fee_t*) read_data(context, sizeof(txn_fee_t));
+void parse_mosaic_definition_creation_txn_content(parse_context_t *context, common_transaction_part_t *common_tx_part) {
+    mosaic_definition_creation_t *txn = (mosaic_definition_creation_t*) read_data(context, MOSAIC_DEFINITION_CREATION_HEADER_LENGTH);
+    // Show namespace id string
+    add_new_field(context, NEM_STR_NAMESPACE, STI_STR, txn->namespaceIdLength, read_data(context, txn->namespaceIdLength));
+    uint32_t mosaicNameLength = read_uint32(read_data(context, sizeof(uint32_t)));
+    // Show mosaic name string
+    add_new_field(context, NEM_STR_NAMESPACE, STI_STR, mosaicNameLength, read_data(context, mosaicNameLength));
+    uint32_t descriptionLength = read_uint32(read_data(context, sizeof(uint32_t)));
+    // Show description string
+    add_new_field(context, NEM_STR_NAMESPACE, STI_STR, descriptionLength, read_data(context, descriptionLength));
+    uint32_t propertyNum = read_uint32(read_data(context, sizeof(uint32_t)));
+    for (uint32_t i = 0; i < propertyNum; i++) {
+        // Property structure length
+        advance_position(context, sizeof(uint32_t));
+        uint32_t propertyNameLength = read_uint32(read_data(context, sizeof(uint32_t)));
+        // Show property name string
+        add_new_field(context, NEM_STR_NAMESPACE, STI_STR, propertyNameLength, read_data(context, propertyNameLength));
+        uint32_t propertyValueLength = read_uint32(read_data(context, sizeof(uint32_t)));
+        // Show property value string
+        add_new_field(context, NEM_STR_NAMESPACE, STI_STR, propertyValueLength, read_data(context, propertyValueLength));
     }
-    aa_header_t *txn = (aa_header_t*) read_data(context, ADDRESS_ALIAS_HEADER_LENGTH);
-    // Show alias type
-    add_new_field(context, NEM_UINT8_AA_TYPE, STI_UINT8, sizeof(uint8_t), (uint8_t*) &txn->aliasAction);
-    // Show namespace id
-    add_new_field(context, NEM_UINT64_NS_ID, STI_UINT64, sizeof(uint64_t), (uint8_t*) &txn->namespaceId);
-    // Show Recipient address
-    add_new_field(context, NEM_STR_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) txn->address);
-    if (!isMultisig) {
-        // Show fee
-        add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &fee->maxFee);
-    }
+    // Levy structure length
+    uint32_t levyStructureLength = read_uint32(read_data(context, sizeof(uint32_t)));
+    if(levyStructureLength != )
 }
 
-void parse_mosaic_alias_txn_content(parse_context_t *context, bool isMultisig) {
-    // get header first
-    txn_fee_t *fee = NULL;
-    if (!isMultisig) {
-        fee = (txn_fee_t*) read_data(context, sizeof(txn_fee_t));
-    }
-    ma_header_t *txn = (ma_header_t*) read_data(context, MOSAIC_ALIAS_HEADER_LENGTH);
-    // Show alisac type
-    add_new_field(context, NEM_UINT8_AA_TYPE, STI_UINT8, sizeof(uint8_t), (uint8_t*) &txn->aliasAction);
-    // Show namespace id
-    add_new_field(context, NEM_UINT64_NS_ID, STI_UINT64, sizeof(uint64_t), (uint8_t*) &txn->namespaceId);
-    // Show mosaic
-    add_new_field(context, NEM_UINT64_MOSAIC_ID, STI_UINT64, sizeof(uint64_t), (uint8_t*) &txn->mosaicId);
-    if (!isMultisig) {
-        // Show fee
-        add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &fee->maxFee);
-    }
-}
-
-void parse_aggregate_txn_content(parse_context_t *context) {
-    // get header first
-    txn_fee_t *fee = (txn_fee_t*) read_data(context, sizeof(txn_fee_t));
-    aggregate_txn_t *txn = (aggregate_txn_t*) read_data(context, AGGREGATE_TXN_LENGTH);
-    // Show transaction hash
-    add_new_field(context, NEM_HASH256_AGG_HASH, STI_HASH256, NEM_TRANSACTION_HASH_LENGTH, (uint8_t*) &txn->transactionHash);
-    if (has_data(context, txn->payloadSize)) {
-        parse_inner_txn_content(context, txn->payloadSize);
-    } else {
-        THROW(EXCEPTION_OVERFLOW);
-    }
-    // Show max fee of aggregate tx
-    add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &fee->maxFee);
-}
 
 void parse_txn_detail(parse_context_t *context, common_transaction_part_t *txn) {
     PRINTF("Parse tc detail\n");

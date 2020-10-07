@@ -149,7 +149,31 @@ newPartString                           array(newPartStringLength)
 parentStringLength                      uint32
 parentString    (optional)              array(parentStringLength)                   (if parentStringLength = FFFFFFFF) this field is omitted
 ```
+Example:
 
+Raw transaction:
+```
+0120000001000098C7AF640A200000009F96DF7E7A639B4034B8BEE5B88AB1D640DB66EB5A47AFE018E320CB130C183DF049020000000000D7BD640A2800000054414D4553504143455748344D4B464D42435646455244504F4F5034464B374D54444A4559503335809698000000000012000000746573745F6E616D6573706163655F6E616D08000000746573745F6E656D
+```
+
+### Parse above transaction
+```
+08                                  01200000
+09                                  01000098
+10                                  C7AF640A
+11                                  20000000
+12                                  9F96DF7E7A639B4034B8BEE5B88AB1D640DB66EB5A47AFE018E320CB130C183D
+13                                  F049020000000000
+14                                  D7BD640A
+
+feeSinkEncodedAddressLength         28000000
+feeSinkEncodedAddress               54414D4553504143455748344D4B464D42435646455244504F4F5034464B374D54444A4559503335
+Rental Fee                          8096980000000000
+newPartStringLength                 12000000
+newPartString                       746573745F6E616D6573706163655F6E616D
+parentStringLength                  08000000
+parentString    (optional)          746573745F6E656D
+```
 #  Mosaic Supply Change Transaction schema
 4. Mosaic Supply Change Transaction (Reference: https://nemproject.github.io/#gathering-data-for-the-signature)
 
@@ -170,3 +194,83 @@ delta                                   uint64
 ##  Mosaic definition creation transaction part schema
 5. Mosaic definition creation transaction (Reference: https://nemproject.github.io/#gathering-data-for-the-signature)
 
+
+## Multisig transaction part schema
+6.  Multisig transaction part
+
+
+```
+Property                                Types                                       Description
+----------------------------------------------------------------------------------------------------------------------
+Inner transaction object Length         uint32_t                                     This can be a transfer, an importance transfer or an aggregate modification transaction.
+```
+
+Example:
+
+Raw transaction:
+```
+04100000010000985560d007200000003e6e6cbac488b8a44bdf5abf27b9e1cc2a6f20d09d550a66b9b36f525ca222eef049020000000000656ed0077400000001010000010000985560d0072000000093ce7f61acd7250f98d9ceeab18281b26fcabbc8845a6749814851626bacbf5150c3000000000000656ed007280000005441353435494341564e45554446554249484f3343454a425356495a37595948464658354c51505440420f000000000000000000
+```
+
+### Parse above transaction
+```
+08                      04100000
+09                      01000098
+10                      5560d007
+11                      20000000
+12                      3e6e6cbac488b8a44bdf5abf27b9e1cc2a6f20d09d550a66b9b36f525ca222ee
+13                      f049020000000000
+14                      656ed007
+
+InnerTransactionLength  74000000
+08                      01010000
+09                      01000098
+10                      5560d007
+11                      20000000
+12                      93ce7f61acd7250f98d9ceeab18281b26fcabbc8845a6749814851626bacbf51
+13                      50c3000000000000
+14                      656ed007
+recipientAddressLength  28000000
+recipientAddress        5441353435494341564e45554446554249484f3343454a425356495a37595948464658354c515054
+amount                  40420f0000000000
+messageFieldLength      00000000
+```
+
+
+## Mutisig signature transaction part schema
+7. Mutisig signature transaction part
+
+
+```
+Property                                Types                                       Description
+----------------------------------------------------------------------------------------------------------------------
+hashObjectLength                        uint32_t                                    Hash of the corresponding multisig transaction
+hashLength                              uint32_t                                    always 0x20
+hash                                    32 bytes                                    32 bytes of SHA3 hash
+addressLength                           uint32_t                                    Length of address of the corresponding multisig account (always 40 = 0x28)
+multisigAccountAddress                  40 bytes                                     40 bytes (using UTF8 encoding).
+```
+
+Example:
+
+Raw transaction:
+```
+02100000010000989c5fd007200000003e6e6cbac488b8a44bdf5abf27b9e1cc2a6f20d09d550a66b9b36f525ca222eef049020000000000ac6dd0072400000020000000d2c70f814fa87b13da000ca42e52085fa233ce0aae718aaefe16c5652d1a6932280000005443453752474f444a354d4c4d354d43564e43495253575445484d4c594545465459355442585142
+```
+
+### Parse above transaction
+```
+08                      02100000
+09                      01000098
+10                      9c5fd007
+11                      20000000
+12                      3e6e6cbac488b8a44bdf5abf27b9e1cc2a6f20d09d550a66b9b36f525ca222ee
+13                      f049020000000000
+14                      ac6dd007
+
+hashObjectLength        24000000
+hashLength              20000000
+hash                    d2c70f814fa87b13da000ca42e52085fa233ce0aae718aaefe16c5652d1a6932
+addressLength           28000000
+multisigAccountAddress  5443453752474f444a354d4c4d354d43564e43495253575445484d4c594545465459355442585142
+```
