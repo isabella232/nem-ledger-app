@@ -21,13 +21,12 @@ endif
 include $(BOLOS_SDK)/Makefile.defines
 
 #  43	0x8000002b	XEM	NEM
-APPNAME = NEM 
-APP_LOAD_PARAMS = --tlvraw 9F:01
+# APP_LOAD_PARAMS = --tlvraw 9F:01
 APP_LOAD_PARAMS +=--appFlags 0x40 --path "44'/43'" --curve secp256k1 --curve ed25519 $(COMMON_LOAD_PARAMS)
 
 APPVERSION_M=0
 APPVERSION_N=0
-APPVERSION_P=1
+APPVERSION_P=2
 APPVERSION=$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)
 DEFINES   += UNUSED\(x\)=\(void\)x
 DEFINES   += APPVERSION=\"$(APPVERSION)\"
@@ -57,7 +56,7 @@ DEFINES   += HAVE_IO_USB HAVE_L4_USBLIB IO_USB_MAX_ENDPOINTS=6 IO_HID_EP_LENGTH=
 DEFINES   +=  LEDGER_MAJOR_VERSION=$(APPVERSION_M) LEDGER_MINOR_VERSION=$(APPVERSION_N) LEDGER_PATCH_VERSION=$(APPVERSION_P)
 
 # U2F
-DEFINES   +=  HAVE_U2F HAVE_IO_U2F 
+DEFINES   +=  HAVE_U2F HAVE_IO_U2F
 # DEFINES   += USB_SEGMENT_SIZE=64
 # DEFINES   += BLE_SEGMENT_SIZE=32 #max MTU, min 20
 DEFINES   += U2F_PROXY_MAGIC=\"NEM\"
@@ -73,7 +72,7 @@ DEFINES   += HAVE_UX_FLOW
 ##############
 #GCCPATH   := $(BOLOS_ENV)/gcc-arm-none-eabi-5_3-2016q1/bin/
 #CLANGPATH := $(BOLOS_ENV)/clang-arm-fropi/bin/
-CC       := $(CLANGPATH)clang 
+CC       := $(CLANGPATH)clang
 
 #CFLAGS   += -O0
 CFLAGS   += -O3 -Os
@@ -82,13 +81,13 @@ AS     := $(GCCPATH)arm-none-eabi-gcc
 
 LD       := $(GCCPATH)arm-none-eabi-gcc
 LDFLAGS  += -O3 -Os
-LDLIBS   += -lm -lgcc -lc 
+LDLIBS   += -lm -lgcc -lc
 
 # import rules to compile glyphs(/pone)
 include $(BOLOS_SDK)/Makefile.glyphs
 
 ### computed variables
-APP_SOURCE_PATH  += src  
+APP_SOURCE_PATH  += src
 SDK_SOURCE_PATH  += lib_stusb lib_stusb_impl lib_u2f lib_ux
 
 

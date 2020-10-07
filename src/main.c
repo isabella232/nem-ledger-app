@@ -69,12 +69,12 @@ typedef struct txContent_t {
 typedef struct publicKeyContext_t {
     cx_ecfp_public_key_t publicKey;
     uint8_t networkId;
-    uint8_t algo;    
+    uint8_t algo;
     uint8_t nemPublicKey[32];
     char address[40];
 } publicKeyContext_t;
 
-typedef struct transactionContext_t {  
+typedef struct transactionContext_t {
     uint8_t pathLength;
     uint8_t networkId;
     uint8_t algo;
@@ -226,7 +226,7 @@ static uint8_t set_result_sign_message() {
     cx_ecfp_public_key_t publicKey;
     uint32_t tx = 0;
 
-    os_perso_derive_node_bip32(CX_CURVE_256K1, tmpCtx.transactionContext.bip32Path, tmpCtx.transactionContext.pathLength, privateKeyData, NULL);    
+    os_perso_derive_node_bip32(CX_CURVE_256K1, tmpCtx.transactionContext.bip32Path, tmpCtx.transactionContext.pathLength, privateKeyData, NULL);
     cx_ecfp_init_public_key(CX_CURVE_Ed25519, NULL, 0, &publicKey);
 
     if (tmpCtx.transactionContext.algo == CX_KECCAK) {
@@ -238,22 +238,22 @@ static uint8_t set_result_sign_message() {
 
         cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyDataR, 32, &privateKey);
         memset(privateKeyDataR, 0, sizeof(privateKeyDataR));
-    }else if (tmpCtx.transactionContext.algo == CX_SHA3) {
+    } else if (tmpCtx.transactionContext.algo == CX_SHA3) {
         cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, &privateKey);
-    }else{
+    } else {
         THROW(0x6b00);
     }
-    
+
     //signature 128
     G_io_apdu_buffer[tx++] = 128;
-    tx = cx_eddsa_sign(&privateKey, 
-                       CX_LAST, 
-                       tmpCtx.transactionContext.algo, 
+    tx = cx_eddsa_sign(&privateKey,
+                       CX_LAST,
+                       tmpCtx.transactionContext.algo,
                        raw_tx + 21,
-                       tmpCtx.transactionContext.rawTxLength, 
-                       NULL, 
-                       0, 
-                       G_io_apdu_buffer, 
+                       tmpCtx.transactionContext.rawTxLength,
+                       NULL,
+                       0,
+                       G_io_apdu_buffer,
                        IO_APDU_BUFFER_SIZE,
                        NULL);
     cx_ecfp_generate_pair2(CX_CURVE_Ed25519, &publicKey, &privateKey, 1, tmpCtx.transactionContext.algo);
@@ -262,10 +262,10 @@ static uint8_t set_result_sign_message() {
     memset(&privateKey, 0, sizeof(privateKey));
     memset(privateKeyData, 0, sizeof(privateKeyData));
 
-  G_io_apdu_buffer[tx++] = 0x90;
-  G_io_apdu_buffer[tx++] = 0x00;
-  tx = 64;
-  return tx;
+    G_io_apdu_buffer[tx++] = 0x90;
+    G_io_apdu_buffer[tx++] = 0x00;
+    tx = 64;
+    return tx;
 }
 
 #define MAX_FLOW_STEPS 10
@@ -375,7 +375,7 @@ void handleGetPublicKey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer,
     } else {
         tmpCtx.publicKeyContext.algo = CX_SHA3;
     }
-    
+
     os_perso_derive_node_bip32(CX_CURVE_256K1, bip32Path, bip32PathLength, privateKeyData, NULL);
 
     if (tmpCtx.publicKeyContext.algo == CX_SHA3) {
@@ -389,7 +389,7 @@ void handleGetPublicKey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer,
         }
         cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyDataR, 32, &privateKey);
         memset(privateKeyDataR, 0, sizeof(privateKeyDataR));
-    }else{ 
+    }else{
         THROW(0x6a80);
     }
     cx_ecfp_generate_pair2(CX_CURVE_Ed25519, &tmpCtx.publicKeyContext.publicKey, &privateKey, 1, tmpCtx.publicKeyContext.algo);
@@ -398,9 +398,9 @@ void handleGetPublicKey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer,
     memset(&privateKey, 0, sizeof(privateKey));
 
     to_nem_public_key_and_address(
-                                  &tmpCtx.publicKeyContext.publicKey, 
-                                  tmpCtx.publicKeyContext.networkId, 
-                                  tmpCtx.publicKeyContext.algo, 
+                                  &tmpCtx.publicKeyContext.publicKey,
+                                  tmpCtx.publicKeyContext.networkId,
+                                  tmpCtx.publicKeyContext.algo,
                                   tmpCtx.publicKeyContext.nemPublicKey,
                                   tmpCtx.publicKeyContext.address
                                   );
@@ -436,10 +436,10 @@ void display_tx(uint8_t *tx_data, uint16_t dataLength,
     } else {
         tmpCtx.transactionContext.algo = CX_SHA3;
     }
-    
+
     // Load dataLength of tx
-    tmpCtx.transactionContext.rawTxLength = dataLength - 21; 
-    
+    tmpCtx.transactionContext.rawTxLength = dataLength - 21;
+
     //NEM_MAINNET || NEM_TESTNET
     //txType
     uint32_t txType = get_uint32_le(&tx_data[21]);
@@ -448,52 +448,54 @@ void display_tx(uint8_t *tx_data, uint16_t dataLength,
     // uint32_t txVersion = get_uint32_le(&tx_data[21+4]);
 
     //Distance index: use for calculating the inner index of multisig tx
-    uint8_t disIndex; 
+    uint8_t disIndex;
 
     int err = -1;
     switch(txContent.txType){
-        case NEMV1_TRANSFER: //Transfer 
-            disIndex = 21; 
+        case NEMV1_TRANSFER: //Transfer
+            disIndex = 21;
             SPRINTF(txTypeName, "%s", "Transfer TX");
             err = parse_transfer_tx (tx_data + disIndex,
                 tmpCtx.transactionContext.rawTxLength,
-                &ux_step_count, 
+                &ux_step_count,
                 detailName,
                 extraInfo,
                 fullAddress,
                 false
-            ); 
+            );
             break;
         case NEMV1_MULTISIG_MODIFICATION:
             disIndex = 21;
             SPRINTF(txTypeName, "%s", "Convert to Multisig");
             err = parse_aggregate_modification_tx (tx_data + disIndex,
                 tmpCtx.transactionContext.rawTxLength,
-                &ux_step_count, 
+                &ux_step_count,
                 detailName,
                 extraInfo,
                 fullAddress,
                 false,
                 tmpCtx.transactionContext.networkId
-            ); 
+            );
             break;
         case NEMV1_MULTISIG_SIGNATURE:
             SPRINTF(txTypeName, "%s", "Mulisig signature");
             disIndex = 21;
             err = parse_multisig_signature_tx (tx_data + disIndex,
                 tmpCtx.transactionContext.rawTxLength,
-                &ux_step_count, 
+                &ux_step_count,
                 detailName,
                 extraInfo,
                 fullAddress
             );
             break;
         case NEMV1_MULTISIG_TRANSACTION:
+            // Todo add inner tx type into txTypeName
+            // For example: Mulisig TX (Inner: Transfer TX)
             SPRINTF(txTypeName, "%s", "Mulisig TX");
             disIndex = 21+4+4+4+4+32+8+4+4;
             err = parse_multisig_tx (tx_data + disIndex,
                 tmpCtx.transactionContext.rawTxLength - (4+4+4+4+32+8+4+4),
-                &ux_step_count, 
+                &ux_step_count,
                 detailName,
                 extraInfo,
                 fullAddress,
@@ -505,40 +507,40 @@ void display_tx(uint8_t *tx_data, uint16_t dataLength,
             SPRINTF(txTypeName, "%s", "Namespace TX");
             err = parse_provision_namespace_tx (tx_data + disIndex,
                 tmpCtx.transactionContext.rawTxLength,
-                &ux_step_count, 
+                &ux_step_count,
                 detailName,
                 extraInfo,
                 fullAddress,
                 false
             );
-            break;                
+            break;
         case NEMV1_MOSAIC_DEFINITION:
             disIndex = 21;
             SPRINTF(txTypeName, "%s", "Create Mosaic");
             err = parse_mosaic_definition_tx (tx_data + disIndex,
                 tmpCtx.transactionContext.rawTxLength,
-                &ux_step_count, 
+                &ux_step_count,
                 detailName,
                 extraInfo,
                 fullAddress,
                 false
             );
-            break; 
+            break;
         case NEMV1_MOSAIC_SUPPLY:
             disIndex = 21;
             SPRINTF(txTypeName, "%s", "Mosaic Supply");
             err = parse_mosaic_supply_tx (tx_data + disIndex,
                 tmpCtx.transactionContext.rawTxLength,
-                &ux_step_count, 
+                &ux_step_count,
                 detailName,
                 extraInfo,
                 fullAddress,
                 false
             );
-            break;         
+            break;
         default:
-            SPRINTF(txTypeName, "tx type %d", txContent.txType); 
-            break;    
+            SPRINTF(txTypeName, "tx type %d", txContent.txType);
+            break;
     }
     if (err) {
         THROW(0x6700);
@@ -579,7 +581,7 @@ void handleSign(uint8_t p1, uint8_t p2, const uint8_t *data, size_t length, unsi
         raw_tx_len = 0;
     }
 
-    // move the contents of the buffer into raw_tx, and update raw_tx_ix to the end of the buffer, 
+    // move the contents of the buffer into raw_tx, and update raw_tx_ix to the end of the buffer,
     // to be ready for the next part of the tx.
     unsigned char * out = raw_tx + raw_tx_ix;
     if (raw_tx_ix + length > MAX_TX_RAW_LENGTH) {
@@ -598,7 +600,7 @@ void handleSign(uint8_t p1, uint8_t p2, const uint8_t *data, size_t length, unsi
         display_tx(raw_tx, raw_tx_len, flags, tx);
     } else {
         // continue reading the tx
-        THROW(0x9000);  
+        THROW(0x9000);
     }
 }
 
@@ -798,7 +800,7 @@ __attribute__((section(".boot"))) int main(void) {
 
     for (;;) {
 	    memset(&txContent, 0, sizeof(txContent));
-	
+
         UX_INIT();
         BEGIN_TRY {
             TRY {

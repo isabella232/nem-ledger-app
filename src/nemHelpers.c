@@ -36,7 +36,7 @@
 uint8_t readNetworkIdFromBip32path(const uint32_t bip32Path[]) {
     uint8_t outNetworkId;
     switch(bip32Path[2]) {
-        case 0x80000068: 
+        case 0x80000068:
             outNetworkId = 104; //N
             break;
         case 0x80000098:
@@ -64,11 +64,11 @@ void to_nem_public_key_and_address(cx_ecfp_public_key_t *inPublicKey, uint8_t in
 
     if ((inPublicKey->W[32] & 1) != 0) {
         outNemPublicKey[31] |= 0x80;
-    }    
+    }
 
     cx_sha3_t hash1;
     cx_sha3_t temphash;
-    
+
     if (inAlgo == CX_SHA3) {
         cx_sha3_init(&hash1, 256);
         cx_sha3_init(&temphash, 256);
@@ -87,7 +87,7 @@ void to_nem_public_key_and_address(cx_ecfp_public_key_t *inPublicKey, uint8_t in
     rawAddress[0] = inNetworkId;   //104,,,,,
     //step2: add ripemd160 hash
     memmove(rawAddress + 1, buffer2, sizeof(buffer2));
-    
+
     unsigned char buffer3[32];
     cx_hash(&temphash.header, CX_LAST, rawAddress, 21, buffer3, sizeof(buffer3));
     //step3: add checksum
@@ -112,7 +112,7 @@ void public_key_to_address(uint8_t inNetworkId, const uint8_t *inNemPublicKey, c
     rawAddress[0] = inNetworkId;   //104,,,,,
     //step2: add ripemd160 hash
     memmove(rawAddress + 1, buffer2, sizeof(buffer2));
-    
+
     unsigned char buffer3[32];
     cx_hash(&temphash.header, CX_LAST, rawAddress, 21, buffer3, sizeof(buffer3));
     //step3: add checksum
