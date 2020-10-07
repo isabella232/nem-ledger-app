@@ -77,7 +77,7 @@ void update_content(int stackSlot) {
     field_t *field = &transaction->fields[stepIndex];
     update_title(field);
     update_value(field);
-    // PRINTF("\nPage %d - Title: %s - Value: %s\n", stepIndex, fieldName, fieldValue);
+    PRINTF("\nPage %d - Title: %s - Value: %s\n", stepIndex, fieldName, fieldValue);
 }
 
 void display_review_menu(result_t *transactionParam, result_action_t callback) {

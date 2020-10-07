@@ -26,10 +26,11 @@ void resolve_fieldname(field_t *field, char* dst) {
         }
     }
 
-    if (field->dataType == STI_UINT16) {
+    if (field->dataType == STI_UINT32) {
         switch (field->id) {
             CASE_FIELDNAME(NEM_UINT32_TRANSACTION_TYPE, "Transaction Type")
             CASE_FIELDNAME(NEM_UINT32_INNER_TRANSACTION_TYPE, "Inner TX Type")
+            CASE_FIELDNAME(NEM_UINT32_MOSAIC_COUNT, "Mosaics")
         }
     }
 
@@ -82,6 +83,7 @@ void resolve_fieldname(field_t *field, char* dst) {
     if (field->dataType == STI_NEM) {
         switch (field->id) {
             CASE_FIELDNAME(NEM_UINT64_TXN_FEE, "Fee")
+            CASE_FIELDNAME(NEM_MOSAIC_AMOUNT, "Amount")
         }
     }
 

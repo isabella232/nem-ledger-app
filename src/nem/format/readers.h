@@ -24,7 +24,7 @@
 void sprintf_hex(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength, uint8_t reverse);
 void sprintf_ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength);
 void sprintf_number(char *dst, uint16_t maxLen, uint64_t value);
-void sprintf_mosaic(char *dst, uint16_t maxLen, mosaic_t *mosaic, char *asset);
+//void sprintf_mosaic(char *dst, uint16_t maxLen, mosaic_t *mosaic, char *asset);
 
 uint64_t read_uint64(uint8_t *src);
 uint16_t read_uint16(uint8_t *src);

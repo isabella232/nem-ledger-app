@@ -90,26 +90,32 @@ void uint8_formatter(field_t* field, char *dst) {
     }
 }
 
-void uint16_formatter(field_t* field, char *dst) {
-    uint16_t value = read_uint16(field->data);
-    switch (value) {
-        CASE_FIELDVALUE(NEM_TXN_TRANSFER, "Transfer")
-        CASE_FIELDVALUE(NEM_TXN_REGISTER_NAMESPACE, "Register Namespace")
-        CASE_FIELDVALUE(NEM_TXN_ADDRESS_ALIAS, "Address Alias")
-        CASE_FIELDVALUE(NEM_TXN_MOSAIC_ALIAS, "Mosaic Alias")
-        CASE_FIELDVALUE(NEM_TXN_MOSAIC_DEFINITION, "Mosaic definition")
-        CASE_FIELDVALUE(NEM_TXN_MOSAIC_SUPPLY_CHANGE, "Mosaic Supply Change")
-        CASE_FIELDVALUE(NEM_TXN_MODIFY_MULTISIG_ACCOUNT, "Modify Multisig Account")
-        CASE_FIELDVALUE(NEM_TXN_AGGREGATE_COMPLETE, "Aggregate Complete")
-        CASE_FIELDVALUE(NEM_TXN_AGGREGATE_BONDED, "Aggregate Bonded")
-        CASE_FIELDVALUE(NEM_TXN_HASH_LOCK, "Hash Lock")
-        default:
-            SNPRINTF(dst, "%s", "Unknown");
+void uint32_formatter(field_t* field, char *dst) {
+    uint32_t value = read_uint32(field->data);
+    if (field->id == NEM_UINT32_MOSAIC_COUNT) {
+        SNPRINTF(dst, "Found %d txs", value);
+    } else if (field->id == NEM_UINT32_TRANSACTION_TYPE) {
+        switch (value) {
+            CASE_FIELDVALUE(NEM_TXN_TRANSFER, "Transfer")
+            CASE_FIELDVALUE(NEM_TXN_REGISTER_NAMESPACE, "Register Namespace")
+            CASE_FIELDVALUE(NEM_TXN_ADDRESS_ALIAS, "Address Alias")
+            CASE_FIELDVALUE(NEM_TXN_MOSAIC_ALIAS, "Mosaic Alias")
+            CASE_FIELDVALUE(NEM_TXN_MOSAIC_DEFINITION, "Mosaic definition")
+            CASE_FIELDVALUE(NEM_TXN_MOSAIC_SUPPLY_CHANGE, "Mosaic Supply Change")
+            CASE_FIELDVALUE(NEM_TXN_MODIFY_MULTISIG_ACCOUNT, "Modify Multisig Account")
+            CASE_FIELDVALUE(NEM_TXN_AGGREGATE_COMPLETE, "Aggregate Complete")
+            CASE_FIELDVALUE(NEM_TXN_AGGREGATE_BONDED, "Aggregate Bonded")
+            CASE_FIELDVALUE(NEM_TXN_HASH_LOCK, "Hash Lock")
+            default:
+                SNPRINTF(dst, "%s", "Unknown");
+        }
+    } else {
+        SNPRINTF(dst, "%d", value);
     }
 }
 
-void uint32_formatter(field_t* field, char *dst) {
-    uint32_t value = read_uint32(field->data);
+void uint16_formatter(field_t* field, char *dst) {
+    uint16_t value = read_uint16(field->data);
     SNPRINTF(dst, "%x", value);
 }
 
@@ -153,17 +159,33 @@ void mosaic_formatter(field_t* field, char *dst) {
 
 void nem_formatter(field_t* field, char *dst) {
     if (field->dataType == STI_NEM) {
-        nem_print_amount(read_uint64(field->data), 6, "NEM", dst);
+        nem_print_amount(read_uint64(field->data), 6, "XEM", dst);
     }
 }
 
 void msg_formatter(field_t* field, char *dst) {
     if (field->length == 0) {
-        SNPRINTF(dst, "%s", "<empty msg>");
-    } else if (field->length >= MAX_FIELD_LEN) {
-        sprintf_ascii(dst, MAX_FIELD_LEN, &field->data[0], MAX_FIELD_LEN - 1);
+        if (field->id == NEM_STR_ENC_MESSAGE) {
+            SNPRINTF(dst, "%s", "<encrypted msg>");
+        } else {
+            SNPRINTF(dst, "%s", "<empty msg>");
+        }
     } else {
-        sprintf_ascii(dst, MAX_FIELD_LEN, &field->data[0], field->length);
+        if (field->data[0] == 0xFE) { // hex message
+            PRINTF("Hex message\n");
+            if (field->length - 1 >= MAX_FIELD_LEN) {
+                sprintf_ascii(dst, MAX_FIELD_LEN, &field->data[1], MAX_FIELD_LEN - 1);
+            } else {
+                sprintf_ascii(dst, MAX_FIELD_LEN, &field->data[1], field->length - 1);
+            }
+        } else {
+            PRINTF("Message\n");
+            if (field->length >= MAX_FIELD_LEN) {
+                sprintf_ascii(dst, MAX_FIELD_LEN, &field->data[0], MAX_FIELD_LEN - 1);
+            } else {
+                sprintf_ascii(dst, MAX_FIELD_LEN, &field->data[0], field->length);
+            }
+        }
     }
 }
 

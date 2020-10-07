@@ -67,7 +67,7 @@ void sprintf_ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength
     dst[dataLength] = '\0';
 }
 
-void sprintf_mosaic(char *dst, uint16_t maxLen, mosaic_t *mosaic, char *asset) {
+// void sprintf_mosaic(char *dst, uint16_t maxLen, mosaic_t *mosaic, char *asset) {
     // sprintf_number(dst, maxLen, mosaic->amount);
     // strcat(dst, " ");
     // strcat(dst, asset);
@@ -76,10 +76,19 @@ void sprintf_mosaic(char *dst, uint16_t maxLen, mosaic_t *mosaic, char *asset) {
     // uint8_t* mosaicId = (uint8_t*) &mosaic->mosaicId;
     // char* mosaicHex = dst + len;
     // sprintf_hex(mosaicHex, maxLen - len, mosaicId, sizeof(uint64_t), 1);
-}
+// }
 
 uint64_t read_uint64(uint8_t *src) {
-    return (uint64_t) *((uint32_t *)src);
+    uint64_t value ;
+    value = src[7] ;
+    value = (value << 8 ) + src[6] ;
+    value = (value << 8 ) + src[5] ;
+    value = (value << 8 ) + src[4] ;
+    value = (value << 8 ) + src[3] ;
+    value = (value << 8 ) + src[2] ;
+    value = (value << 8 ) + src[1] ;
+    value = (value << 8 ) + src[0] ;
+    return value ;
 }
 
 uint8_t read_uint8(uint8_t *src) {
@@ -91,7 +100,7 @@ uint16_t read_uint16(uint8_t *src) {
 }
 
 uint32_t read_uint32(uint8_t *src) {
-    return (uint32_t) *((uint32_t *)src);
+    return (src[3] << 24) | (src[2] << 16) | (src[1] << 8) | src[0];
 }
 
 int8_t read_int8(uint8_t *src) {
