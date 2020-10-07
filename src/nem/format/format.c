@@ -147,19 +147,12 @@ void address_formatter(field_t* field, char *dst) {
 }
 
 void mosaic_formatter(field_t* field, char *dst) {
-    // if (field->dataType == STI_MOSAIC_CURRENCY) {
-    //     mosaic_t* value = (mosaic_t *)field->data;
-    //     if (value->mosaicId == NEM_MOSAIC_ID || field->id == NEM_MOSAIC_HL_QUANTITY) {
-    //         nem_print_amount(value->amount, 6, "NEM", dst);
-    //     } else {
-    //         sprintf_mosaic(dst, MAX_FIELD_LEN, value, "micro");
-    //     }
-    // }
+    sprintf_mosaic(dst, MAX_FIELD_LEN, field->data, field->length);
 }
 
 void nem_formatter(field_t* field, char *dst) {
     if (field->dataType == STI_NEM) {
-        nem_print_amount(read_uint64(field->data), 6, "XEM", dst);
+        nem_print_amount(read_uint64(field->data), 6, "xem", dst);
     }
 }
 
@@ -213,7 +206,6 @@ field_formatter_t get_formatter(field_t* field) {
             return hash_formatter;
         case STI_ADDRESS:
             return address_formatter;
-        case STI_MOSAIC_COUNT:
         case STI_MOSAIC_CURRENCY:
             return mosaic_formatter;
         case STI_NEM:

@@ -27,7 +27,7 @@ char int_to_number_char(uint64_t value) {
     return (char) ('0' + value);
 }
 
-void sprintf_number(char *dst, uint16_t len, uint64_t value) {
+uint16_t sprintf_number(char *dst, uint16_t len, uint64_t value) {
     uint16_t numDigits = 0, i;
     uint64_t base = 1;
     while (base <= value) {
@@ -43,6 +43,7 @@ void sprintf_number(char *dst, uint16_t len, uint64_t value) {
         base /= 10;
     }
     dst[i] = '\0';
+    return i;
 }
 
 void sprintf_hex(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength, uint8_t reverse) {
@@ -67,16 +68,12 @@ void sprintf_ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength
     dst[dataLength] = '\0';
 }
 
-// void sprintf_mosaic(char *dst, uint16_t maxLen, mosaic_t *mosaic, char *asset) {
-    // sprintf_number(dst, maxLen, mosaic->amount);
-    // strcat(dst, " ");
-    // strcat(dst, asset);
-    // strcat(dst, " 0x");
-    // uint16_t len = strlen(dst);
-    // uint8_t* mosaicId = (uint8_t*) &mosaic->mosaicId;
-    // char* mosaicHex = dst + len;
-    // sprintf_hex(mosaicHex, maxLen - len, mosaicId, sizeof(uint64_t), 1);
-// }
+void sprintf_mosaic(char *dst, uint16_t maxLen, uint8_t *mosaic, uint16_t dataLength) {
+    uint16_t mosaicNameLen = dataLength - 8;
+    uint16_t len = sprintf_number(dst, maxLen, read_uint64(mosaic + mosaicNameLen));
+    strcat(dst, " ");
+    sprintf_ascii(dst+len+1, maxLen-len-1, mosaic, mosaicNameLen);
+}
 
 uint64_t read_uint64(uint8_t *src) {
     uint64_t value ;

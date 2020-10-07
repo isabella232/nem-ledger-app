@@ -215,6 +215,7 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header *com
             for (uint32_t i = 0; i < numMosaic; i++) {
                 uint32_t msStructLen = read_uint32(read_data(context, sizeof(uint32_t)));
                 uint32_t msIdStructLen = read_uint32(read_data(context, sizeof(uint32_t)));
+                // add_new_field(context, NEM_MOSAIC, STI_MOSAIC_CURRENCY, sizeof(uint64_t), read_data(context, msStructLen+msIdStructLen));
                 uint32_t nsIdLen = read_uint32(read_data(context, sizeof(uint32_t)));
                 PRINTF("%d %d %d\n", msStructLen, msIdStructLen, nsIdLen);
                 uint8_t *namespaceId = read_data(context, nsIdLen);
@@ -223,12 +224,20 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header *com
                 pMosaic = read_data(context, sizeof(uint32_t));
                 uint32_t mosaicNameLen = read_uint32(pMosaic);
                 PRINTF("%d\n", mosaicNameLen);
-                uint8_t *mosaicName = read_data(context, mosaicNameLen);
-                sprintf_ascii(str, 32, mosaicName, mosaicNameLen);
-                PRINTF("mosaicName=%s\n", str);
-                uint8_t *quantity = read_data(context, sizeof(uint64_t));
-                sprintf_number(str, 32, read_uint64(quantity));
-                PRINTF("mosaic Quantity=%s\n", str);
+                // uint8_t *mosaicName = read_data(context, mosaicNameLen);
+                // sprintf_ascii(str, 32, mosaicName, mosaicNameLen);
+                // PRINTF("mosaicName=%s\n", str);
+                // uint8_t *quantity = read_data(context, sizeof(uint64_t));
+                // mosaicData: name + quantity (8 bytes)
+                uint8_t *mosaicData = read_data(context, mosaicNameLen + sizeof(uint64_t));
+                sprintf_ascii(str, 32, mosaicData, mosaicNameLen);
+                if (strcmp(str, "xem") == 0) {
+                    uint8_t *quantity = mosaicData + mosaicNameLen;
+                    add_new_field(context, NEM_MOSAIC_AMOUNT, STI_NEM, sizeof(uint64_t), quantity);
+                } else {
+                    add_new_field(context, NEM_MOSAIC_UNITS, STI_MOSAIC_CURRENCY, mosaicNameLen + sizeof(uint64_t), mosaicData);
+                }
+
                 //add_new_field(context, NEM_MOSAIC, STI_MOSAIC_CURRENCY, sizeof(uint64_t), read_data(context, sizeof(uint64_t)));
                 // todo add mosaic order
                 // Field:       Mosaic

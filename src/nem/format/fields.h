@@ -76,6 +76,7 @@
 
 #define NEM_MOSAIC_HL_QUANTITY 0xD0
 #define NEM_MOSAIC_AMOUNT 0xD1
+#define NEM_MOSAIC_UNITS 0xD2
 
 typedef struct {
     uint8_t id;

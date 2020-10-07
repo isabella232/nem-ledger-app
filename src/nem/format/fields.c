@@ -77,6 +77,7 @@ void resolve_fieldname(field_t *field, char* dst) {
         switch (field->id) {
             CASE_FIELDNAME(NEM_MOSAIC_AMOUNT, "Amount")
             CASE_FIELDNAME(NEM_MOSAIC_HL_QUANTITY, "Lock Quantity")
+            CASE_FIELDNAME(NEM_MOSAIC_UNITS, "Micro Units")
         }
     }
 
