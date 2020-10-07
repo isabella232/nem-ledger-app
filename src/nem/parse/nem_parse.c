@@ -20,8 +20,9 @@
 #include "nem/nem_helpers.h"
 #include "nem/format/readers.h"
 
-#define TRANSFER_TXN_HEADER_LENGTH           52
+#define TRANSFER_TXN_HEADER_LENGTH           56
 typedef struct {
+    uint32_t recipientAddressLen;
     uint8_t recipientAddress[NEM_ADDRESS_LENGTH];
     uint64_t amount;
     uint32_t messageLength;
@@ -114,7 +115,7 @@ typedef struct {
     uint32_t reserve;
 } multisig_account_t;
 
-#define COMMON_TX_HEADER_LENGTH             64
+#define COMMON_TX_HEADER_LENGTH             60
 typedef struct {
     uint32_t transactionType;
     uint32_t version;
@@ -182,7 +183,6 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header *com
     // Show Recipient address
     add_new_field(context, NEM_STR_RECIPIENT_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &txn->recipientAddress);
     sprintf_number(str, 32, txn->amount);
-    PRINTF("\nMessage length: %d - Amount: %s\n", txn->messageLength,str);
     if (txn->messageLength == 0) {
         // empty msg
         add_new_field(context, NEM_STR_TXN_MESSAGE, STI_MESSAGE, 0, NULL);
@@ -205,7 +205,6 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header *com
     } else if (context->version == 2) { //NEM2
         uint8_t* pMosaic = read_data(context, sizeof(uint32_t));
         uint32_t numMosaic = read_uint32(pMosaic);
-        PRINTF("Mosaic count: %d\n", numMosaic);
         if (numMosaic == 0) {
             // Show xem amount
             add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->amount);
@@ -215,7 +214,6 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header *com
             for (uint32_t i = 0; i < numMosaic; i++) {
                 uint32_t msStructLen = read_uint32(read_data(context, sizeof(uint32_t)));
                 uint32_t msIdStructLen = read_uint32(read_data(context, sizeof(uint32_t)));
-                // add_new_field(context, NEM_MOSAIC, STI_MOSAIC_CURRENCY, sizeof(uint64_t), read_data(context, msStructLen+msIdStructLen));
                 uint32_t nsIdLen = read_uint32(read_data(context, sizeof(uint32_t)));
                 PRINTF("%d %d %d\n", msStructLen, msIdStructLen, nsIdLen);
                 uint8_t *namespaceId = read_data(context, nsIdLen);
@@ -223,36 +221,15 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header *com
                 PRINTF("namespaceId=%s\n", str);
                 pMosaic = read_data(context, sizeof(uint32_t));
                 uint32_t mosaicNameLen = read_uint32(pMosaic);
-                PRINTF("%d\n", mosaicNameLen);
-                // uint8_t *mosaicName = read_data(context, mosaicNameLen);
-                // sprintf_ascii(str, 32, mosaicName, mosaicNameLen);
-                // PRINTF("mosaicName=%s\n", str);
-                // uint8_t *quantity = read_data(context, sizeof(uint64_t));
-                // mosaicData: name + quantity (8 bytes)
                 uint8_t *mosaicData = read_data(context, mosaicNameLen + sizeof(uint64_t));
                 sprintf_ascii(str, 32, mosaicData, mosaicNameLen);
+                PRINTF("mosaicName=%s\n", str);
                 if (strcmp(str, "xem") == 0) {
                     uint8_t *quantity = mosaicData + mosaicNameLen;
                     add_new_field(context, NEM_MOSAIC_AMOUNT, STI_NEM, sizeof(uint64_t), quantity);
                 } else {
                     add_new_field(context, NEM_MOSAIC_UNITS, STI_MOSAIC_CURRENCY, mosaicNameLen + sizeof(uint64_t), mosaicData);
                 }
-
-                //add_new_field(context, NEM_MOSAIC, STI_MOSAIC_CURRENCY, sizeof(uint64_t), read_data(context, sizeof(uint64_t)));
-                // todo add mosaic order
-                // Field:       Mosaic
-                // Format:   (1/{mosaicNum})
-                // Show namespace id string
-                //add_new_field(context, NEM_STR_NAMESPACE, STI_STR, mosaic->namespaceIdLength, read_data(context, mosaic->namespaceIdLength));
-                // PRINTF("Namespace done\n");
-                // data_uint32_t *mosaicName = (data_uint32_t*) read_data(context, DATA_UINT32_HEADER_LENGTH);
-                // PRINTF("mosaic name %x\n", mosaicName->data32);
-                // Show mosaic name string
-                //add_new_field(context, NEM_STR_NAMESPACE, STI_STR, mosaic->namespaceIdLength, read_data(context, mosaic->namespaceIdLength));
-                // // PRINTF("Mosaic quan start\n");
-                // Show mosaic quantity
-                //add_new_field(context, NEM_MOSAIC_AMOUNT, STI_MOSAIC_CURRENCY, sizeof(uint64_t), read_data(context, sizeof(uint64_t)));
-                // PRINTF("Mosaic quan done\n");
             }
         }
     }
@@ -460,13 +437,11 @@ void set_sign_data_length(parse_context_t *context) {
 }
 
 common_txn_header *parse_common_txn_header(parse_context_t *context) {
-    PRINTF("Parse tx common header\n");
-    uint32_t length = sizeof(common_txn_header);
     // get gen_hash and transaction_type
-    common_txn_header *txn = (common_txn_header *) read_data(context, length);
+    common_txn_header *txn = (common_txn_header *) read_data(context, COMMON_TX_HEADER_LENGTH);
     // Get the version the transaction
     context->version = txn->version;
-    PRINTF("Version %x\n", context->version);
+    PRINTF("NEM Version %x\n", context->version);
     return txn;
 }
 
