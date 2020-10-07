@@ -16,7 +16,7 @@
 09. Version                        (4 bytes)  (depends on tx) (01000098) (depends on network and transaction type)
 10. Timestamp                      (4 bytes)  (depends on tx) (9B5CD007)
 11. Public key length              (4 bytes)  (fixed) (20000000)
-12. Signer Public Key              (8 bytes)  (depends on tx) (3E6E6CBAC488B8A44BDF5ABF27B9E1CC2A6F20D09D550A66B9B36F525CA222EE)
+12. Signer Public Key              (32 bytes)  (depends on tx) (3E6E6CBAC488B8A44BDF5ABF27B9E1CC2A6F20D09D550A66B9B36F525CA222EE)
 13. Fee (micro xem)                (8 bytes)  (depends on tx) (A086010000000000)
 14. Deadline                       (4 bytes)  (depends on tx) (AB6AD007)
 ```
