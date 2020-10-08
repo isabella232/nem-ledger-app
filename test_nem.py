@@ -59,12 +59,15 @@ def send_package(network_type, apdu_hex, data_hex=None):
     bipp32 = get_bipp32_path(network_type)
     result = dongle.exchange(bytes(bytearray.fromhex(apdu_hex + tx_len + to_hex(int(BIPP32_LENGTH/4)) + bipp32 + data_hex)))
     print("Result len: " + str(len(result)))
+    if apdu_hex == APDU_SIGN_TX:
+        print("Signature: " + result.hex().upper())
+    elif apdu_hex == APDU_GET_ACCOUNT:
+        print("Address [" + str(result[0]) + "] " + result[1:41].decode())
+        print("PublicKey [" + str(result[41]) + "] " + result[42:74].hex().upper())
     return result
 
 def verify_address(network_type):
     result = send_package(network_type, APDU_GET_ACCOUNT)
-    print("Address respond     [" + str(result[0]) + "] " + result[1:41].decode())
-    print("PublicKey respond   [" + str(result[41]) + "] " + result[42:74].hex().upper())
 
 def sign_transfer_tx(network_type):
     TXN =  "01010000010000989b5cd007200000003e6e6cbac488b8a44bdf5abf27b9e1cc2a6f20d09d550a66b9b36f525ca222eea086010000000000ab6ad007280000005441353435494341564e45554446554249484f3343454a425356495a37595948464658354c51505440420f00000000002000000001000000180000005369676e20746573746e6574207472616e73616374696f6e"
@@ -105,8 +108,8 @@ def sign_multisig_signature_transaction(network_type):
 
 verify_address(TESTNET)
 sign_transfer_tx(TESTNET)
-# sign_multiple_mosaic_tx(TESTNET)
-# sign_importance_transfer_tx(TESTNET)
+sign_multiple_mosaic_tx(TESTNET)
+sign_importance_transfer_tx(TESTNET)
 # sign_create_namespace_tx(TESTNET)
 # sign_create_mosaic_tx(TESTNET)
 # sign_create_mosaic_levy_tx(TESTNET)

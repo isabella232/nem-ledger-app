@@ -103,7 +103,6 @@ typedef struct {
 } inner_tx_header_t;
 
 
-
 #define MUTLISIG_ACCOUNT_HEADER_LENGTH 8
 typedef struct {
     int8_t minRemovalDelta;
@@ -181,6 +180,7 @@ uint8_t get_version(uint32_t _version) {
 void parse_transfer_txn_content(parse_context_t *context, common_txn_header_t *common_header) {
     transfer_txn_header_t *txn = (transfer_txn_header_t*) read_data(context, TRANSFER_TXN_HEADER_LENGTH);
     char str[32];
+    uint8_t *ptr;
     // Show Recipient address
     add_new_field(context, NEM_STR_RECIPIENT_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &txn->recipientAddress);
     sprintf_number(str, 32, txn->amount);
@@ -190,7 +190,6 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header_t *c
     } else if (txn->messageLength > 0) {
         uint32_t payloadType = _read_uint32(context);
         uint32_t payloadLength = _read_uint32(context);
-        PRINTF("payload length: %d, msg type %d\n", payloadLength, payloadType);
         if (payloadType == 1) {
             // Show Message
             add_new_field(context, NEM_STR_TXN_MESSAGE, STI_MESSAGE, payloadLength, read_data(context, payloadLength));
@@ -204,37 +203,48 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header_t *c
         // Show xem amount
         add_new_field(context, NEM_MOSAIC_AMOUNT, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->amount);
     } else if (context->version == 2) { //NEM2
-        uint8_t* pMosaic = read_data(context, sizeof(uint32_t));
-        uint32_t numMosaic = read_uint32(pMosaic);
+        // num of mosaic pointer
+        ptr = read_data(context, sizeof(uint32_t));
+        uint32_t numMosaic = read_uint32(ptr);
         if (numMosaic == 0) {
             // Show xem amount
             add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->amount);
         } else {
             // Show sent other mosaic num
-            add_new_field(context, NEM_UINT32_MOSAIC_COUNT, STI_UINT32, sizeof(uint32_t), (uint8_t*) pMosaic);
+            add_new_field(context, NEM_UINT32_MOSAIC_COUNT, STI_UINT32, sizeof(uint32_t), ptr);
             for (uint32_t i = 0; i < numMosaic; i++) {
-                uint32_t msStructLen = read_uint32(read_data(context, sizeof(uint32_t)));
-                uint32_t msIdStructLen = read_uint32(read_data(context, sizeof(uint32_t)));
-                uint32_t nsIdLen = read_uint32(read_data(context, sizeof(uint32_t)));
-                PRINTF("%d %d %d\n", msStructLen, msIdStructLen, nsIdLen);
-                uint8_t *namespaceId = read_data(context, nsIdLen);
-                sprintf_ascii(str, 32, namespaceId, nsIdLen);
+                // mosaic structure length pointer
+                ptr = read_data(context, sizeof(uint32_t));
+                // mosaicId structure length pointer
+                ptr = read_data(context, sizeof(uint32_t));
+                // namespaceID length pointer
+                ptr = read_data(context, sizeof(uint32_t));
+                uint32_t nsIdLen = read_uint32(ptr);
+                // namespaceID pointer
+                ptr = read_data(context, nsIdLen);
+                sprintf_ascii(str, 32, ptr, nsIdLen);
                 PRINTF("namespaceId=%s\n", str);
-                pMosaic = read_data(context, sizeof(uint32_t));
-                uint32_t mosaicNameLen = read_uint32(pMosaic);
-                uint8_t *mosaicData = read_data(context, mosaicNameLen + sizeof(uint64_t));
-                sprintf_ascii(str, 32, mosaicData, mosaicNameLen);
+                uint8_t is_nem = 0; //namespace is nem
+                if (strcmp(str, "nem") == 0) {
+                    is_nem = 1;
+                }
+                // mosaic name length pointer
+                ptr = read_data(context, sizeof(uint32_t));
+                uint32_t mosaicNameLen = read_uint32(ptr);
+                // mosaic name and quantity
+                ptr = read_data(context, mosaicNameLen + sizeof(uint64_t));
+                sprintf_ascii(str, 32, ptr, mosaicNameLen);
                 PRINTF("mosaicName=%s\n", str);
-                if (strcmp(str, "xem") == 0) {
-                    uint8_t *quantity = mosaicData + mosaicNameLen;
-                    add_new_field(context, NEM_MOSAIC_AMOUNT, STI_NEM, sizeof(uint64_t), quantity);
+                if (is_nem == 1 && strcmp(str, "xem") == 0) {
+                    // xem quantity
+                    add_new_field(context, NEM_MOSAIC_AMOUNT, STI_NEM, sizeof(uint64_t), (uint8_t *)(ptr + mosaicNameLen));
                 } else {
-                    add_new_field(context, NEM_MOSAIC_UNITS, STI_MOSAIC_CURRENCY, mosaicNameLen + sizeof(uint64_t), mosaicData);
+                    // mosaic name and quantity
+                    add_new_field(context, NEM_MOSAIC_UNITS, STI_MOSAIC_CURRENCY, mosaicNameLen + sizeof(uint64_t), ptr);
                 }
             }
         }
     }
-
 }
 
 void parse_importance_tranfer_txn_content(parse_context_t *context, common_txn_header_t *common_header) {
@@ -260,7 +270,7 @@ void parse_aggregate_modification_txn_content(parse_context_t *context, common_t
         add_new_field(context, NEM_PUBLICKEY_AM_COSIGNATORY, STI_HASH256, NEM_PUBLIC_KEY_LENGTH, (uint8_t*) &txn->cosignatoryPublicKey);
     }
     if (get_version(common_header->version) == 2) {
-        uint8_t *ptr = read_data(context, sizeof(uint32_t));
+        ptr = read_data(context, sizeof(uint32_t));
         uint32_t cosignaturiesModificationStructureLength = read_uint32(ptr);
         if (cosignaturiesModificationStructureLength > 0) {
             // Show relative change in minimum cosignatories modification structure
@@ -409,7 +419,7 @@ void parse_inner_txn_content(parse_context_t *context, uint32_t len) {
     }
 }
 
-void parse_multisig_txn_context(parse_context_t *context, common_txn_header_t *common_tx_part) {
+void parse_multisig_txn_context(parse_context_t *context, common_txn_header_t *common_header) {
     uint32_t innerTxnLength = read_uint32(read_data(context, sizeof(uint32_t)));
     if (has_data(context, innerTxnLength)) {
         parse_inner_txn_content(context, innerTxnLength);
