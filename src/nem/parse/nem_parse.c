@@ -22,7 +22,7 @@
 
 #define TRANSFER_TXN_HEADER_LENGTH           56
 typedef struct {
-    uint32_t recipientAddressLen;
+    uint32_t recipientAddressLength;
     uint8_t recipientAddress[NEM_ADDRESS_LENGTH];
     uint64_t amount;
     uint32_t messageLength;
@@ -59,19 +59,18 @@ typedef struct {
     uint32_t relativeChange;
 } cosignatories_modification_header_t;
 
-#define PROVISION_NAMESPACE_HEADER_LENGTH    56
+#define PROVISION_NAMESPACE_HEADER_LENGTH    52
 typedef struct {
     uint32_t sinkAddressLength;
     uint8_t sinkAddress[NEM_ADDRESS_LENGTH];
     uint64_t rentailFee;
-    uint32_t newPartLength;
 } provision_namespace_header_t;
 
 #define MOSAIC_DEFINITION_CREATION_HEADER_LENGTH    48
 typedef struct {
     uint32_t definitionStructureLength;
-    uint32_t publicKeyLenght;
-    uint8_t publicKey[32];
+    uint32_t publicKeyLength;
+    uint8_t publicKey[NEM_PUBLIC_KEY_LENGTH];
     uint32_t idStructureLength;
     uint32_t namespaceIdLength;
 } mosaic_definition_creation_t;
@@ -81,7 +80,7 @@ typedef struct {
     uint32_t structureLength;
     uint32_t feeType;
     uint32_t addressLength;
-    uint8_t address[40];
+    uint8_t address[NEM_ADDRESS_LENGTH];
     uint32_t mosaicIdLength;
     uint32_t namespaceIdLength;
 } levy_structure_t;
@@ -89,7 +88,7 @@ typedef struct {
 #define MOSAIC_DEFINITION_SINK_HEADER_LENGTH          52
 typedef struct {
     uint32_t addressLength;
-    uint8_t address[40];
+    uint8_t address[NEM_ADDRESS_LENGTH];
     uint64_t fee;
 } mosaic_definition_sink_t;
 
@@ -209,7 +208,7 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header *com
             // Show xem amount
             add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->amount);
         } else {
-            // // Show sent other mosaic num
+            // Show sent other mosaic num
             add_new_field(context, NEM_UINT32_MOSAIC_COUNT, STI_UINT32, sizeof(uint32_t), (uint8_t*) pMosaic);
             for (uint32_t i = 0; i < numMosaic; i++) {
                 uint32_t msStructLen = read_uint32(read_data(context, sizeof(uint32_t)));
@@ -252,50 +251,47 @@ void parse_aggregate_modification_txn_content(parse_context_t *context, common_t
     // Add number of cosignatory modification
     for (uint32_t i = 0; i < cosignatoriesModificationNum; i++) {
         aggregate_modication_header_t *txn = (aggregate_modication_header_t*) read_data(context, AGGREGATE_MODIFICATION_HEADER_LENGTH);
+        //  Show modification type
+        add_new_field(context, NEM_UINT32_AM_MODICATION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &txn->modicationType);
+        // Show public key of cosignatory
+        add_new_field(context, NEM_HASH256_AGG_HASH, STI_HASH256, NEM_PUBLIC_KEY_LENGTH, (uint8_t*) &txn->cosignatoryPublicKey);
     }
-    // // Show min removal delta
-    // add_new_field(context, NEM_INT8_MAM_REMOVAL_DELTA, STI_INT8, sizeof(int8_t), (uint8_t*) &txn->minRemovalDelta);
-    // // Show min approval delta
-    // add_new_field(context, NEM_INT8_MAM_APPROVAL_DELTA, STI_INT8, sizeof(int8_t), (uint8_t*) &txn->minApprovalDelta);
-    // // Show address additions count
-    // add_new_field(context, NEM_UINT8_MAM_ADD_COUNT, STI_UINT8, sizeof(uint8_t), (uint8_t*) &txn->addressAdditionsCount);
-    // // Show list of addition address
-    // for (uint8_t i = 0; i < txn->addressAdditionsCount; i++) {
-    //     add_new_field(context, NEM_STR_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, read_data(context, NEM_ADDRESS_LENGTH));
-    // }
-    // // Show address deletions count
-    // add_new_field(context, NEM_UINT8_MAM_DEL_COUNT, STI_UINT8, sizeof(uint8_t), (uint8_t*) &txn->addressDeletionsCount);
-    // // Show list of addition address
-    // for (uint8_t i = 0; i < txn->addressDeletionsCount; i++) {
-    //     add_new_field(context, NEM_STR_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, read_data(context, NEM_ADDRESS_LENGTH));
-    // }
+    uint32_t cosignaturiesModificationStructureLength = read_data(context, sizeof(uint32_t));
+    if (cosignaturiesModificationStructureLength > 0) {
+        // Show relative change in minimum cosignatories modification structure
+        add_new_field(context, NEM_UINT32_AM_RELATIVE_CHANGE, STI_UINT32, sizeof(uint32_t), read_data(context, sizeof(uint32_t)));
+    }
+    // Show fee
+    add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
 }
 
 void parse_multisig_signature_txn_context(parse_context_t *context, common_txn_header *common_tx_part) {
     multsig_signature_header_t *txn = (multsig_signature_header_t*) read_data(context, MULTISIG_SIGNATURE_HEADER_LENGTH);
+    // Show sha3 hash
+    add_new_field(context, NEM_HASH256_AGG_HASH, STI_HASH256, txn->hashLength, (uint8_t*) txn->hash);
+    // Show Recipient address
+    add_new_field(context, NEM_STR_RECIPIENT_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &txn->address);
     // Show fee
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_tx_part->fee);
 }
 
 void parse_inner_txn_content(parse_context_t *context, uint32_t len) {
     uint32_t totalSize = 0;
-    do {
+    while (totalSize < len) {
         // get header first
-        inner_tx_header_t *txn = (inner_tx_header_t*) read_data(context, INNER_TX_HEADER_LENGTH);
-        totalSize += txn->size + 2;
+        common_txn_header *txn = (common_txn_header*) read_data(context, COMMON_TX_HEADER_LENGTH);
+        context->version = txn->version;
+        totalSize +=  + COMMON_TX_HEADER_LENGTH;
         // Show Transaction type
-        add_new_field(context, NEM_UINT32_INNER_TRANSACTION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &txn->innerTxType);
-        switch (txn->innerTxType) {
+        add_new_field(context, NEM_UINT32_INNER_TRANSACTION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &txn->transactionType);
+        switch (txn->transactionType) {
             case NEM_TXN_TRANSFER:
-                parse_transfer_txn_content(context, true);
+                parse_transfer_txn_content(context, txn);
                 break;
             default:
                 break;
         }
-        if (totalSize < len-5) {
-            advance_position(context, 2);
-        }
-    } while (totalSize < len-5);
+    }
 }
 
 void parse_multisig_txn_context(parse_context_t *context, common_txn_header *common_tx_part) {
@@ -308,37 +304,41 @@ void parse_multisig_txn_context(parse_context_t *context, common_txn_header *com
 }
 
 void parse_provision_namespace_txn_content(parse_context_t *context, common_txn_header *common_header) {
-    for (uint8_t i = 0; i<20; i++) {
-        PRINTF("%02x", *(context->data +i));
-    }
     provision_namespace_header_t *txn = (provision_namespace_header_t*) read_data(context, PROVISION_NAMESPACE_HEADER_LENGTH);
-    // Show sink address
-    add_new_field(context, NEM_STR_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &txn->sinkAddress);
+    PRINTF("read namespace data ok\n");
+    PRINTF("address ok\nRentail fee: %x\n", txn->rentailFee);
     // Add rental fee
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->rentailFee);
-    // // New part string
-    add_new_field(context, NEM_STR_NAMESPACE, STI_STR, txn->newPartLength, read_data(context, txn->newPartLength));
-    uint32_t *parentStringLength = (uint32_t*) read_data(context, sizeof(uint32_t));
-    // if (parentStringLength != 0xffffffff ) {
-    //     // Parent string
-    //     add_new_field(context, NEM_STR_NAMESPACE, STI_STR, parentStringLength, read_data(context, parentStringLength));
-    // }
+    uint32_t newPartStringLength = _read_uint32(context);
+    // New part string
+    PRINTF("namespace name length:%d\n", newPartStringLength);
+    add_new_field(context, NEM_STR_NAMESPACE, STI_STR, newPartStringLength, read_data(context, newPartStringLength));
+    uint32_t parentStringLength = _read_uint32(context);
+    if (parentStringLength != 0xffffffff ) {
+        PRINTF("has data of root namespce\n");
+        // Parent string
+        add_new_field(context, NEM_STR_NAMESPACE, STI_STR, parentStringLength, read_data(context, parentStringLength));
+    }
     // Show fee
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
-
 }
 
 void parse_mosaic_definition_creation_txn_content(parse_context_t *context, common_txn_header *common_tx_part) {
+    PRINTF("mosaic definition\n");
     mosaic_definition_creation_t *txn = (mosaic_definition_creation_t*) read_data(context, MOSAIC_DEFINITION_CREATION_HEADER_LENGTH);
+    PRINTF("namespace id len %d\n", txn->namespaceIdLength);
     // Show namespace id string
     add_new_field(context, NEM_STR_NAMESPACE, STI_STR, txn->namespaceIdLength, read_data(context, txn->namespaceIdLength));
     uint32_t mosaicNameLength = read_uint32(read_data(context, sizeof(uint32_t)));
+    PRINTF("mosaic name len %d\n", mosaicNameLength);
     // Show mosaic name string
     add_new_field(context, NEM_STR_NAMESPACE, STI_STR, mosaicNameLength, read_data(context, mosaicNameLength));
     uint32_t descriptionLength = read_uint32(read_data(context, sizeof(uint32_t)));
+    PRINTF("description len %d\n", descriptionLength);
     // Show description string
     add_new_field(context, NEM_STR_NAMESPACE, STI_STR, descriptionLength, read_data(context, descriptionLength));
     uint32_t propertyNum = read_uint32(read_data(context, sizeof(uint32_t)));
+    PRINTF("property num %d\n", propertyNum);
     for (uint32_t i = 0; i < propertyNum; i++) {
         // Property structure length
         advance_position(context, sizeof(uint32_t));
@@ -348,23 +348,30 @@ void parse_mosaic_definition_creation_txn_content(parse_context_t *context, comm
         uint32_t propertyValueLength = read_uint32(read_data(context, sizeof(uint32_t)));
         // Show property value string
         add_new_field(context, NEM_STR_NAMESPACE, STI_STR, propertyValueLength, read_data(context, propertyValueLength));
+        PRINTF("dONE property\n");
     }
     // Levy structure length
-    uint32_t levyStructureLength = read_uint32(read_data(context, sizeof(uint32_t)));
-    if(levyStructureLength != 0) {
+    uint32_t levyStructureLength = _read_uint32(context);
+    PRINTF("get into levy structure %d\n", levyStructureLength);
+    if(levyStructureLength > 0) {
         levy_structure_t *levy = (levy_structure_t*) read_data(context, LEVY_STRUCTURE_HEADER_LENGTH);
         // Show fee type
-        add_new_field(context, NEM_UINT32_LEVY_FEE_TYPE, STI_UINT32, sizeof(uint32_t), (uint32_t*) &levy->feeType);
+        add_new_field(context, NEM_UINT32_LEVY_FEE_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &levy->feeType);
         // Show recipient address
         add_new_field(context, NEM_STR_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &levy->address);
-        uint32_t namespaceIdLength = read_uint32(read_data(context, sizeof(uint32_t)));
+        uint32_t namespaceIdLength = _read_uint32(context);
+        PRINTF("namespaceId Length: %x", namespaceIdLength);
         // Show namespace name string
-        add_new_field(context, NEM_STR_NAMESPACE, STI_STR, namespaceIdLength, read_data(context, namespaceIdLength));
-        uint32_t mosaicNameLength = read_uint32(read_data(context, sizeof(uint32_t)));
+        advance_position(context, namespaceIdLength);
+        // add_new_field(context, NEM_STR_NAMESPACE, STI_STR, namespaceIdLength, read_data(context, namespaceIdLength));
+        uint32_t mosaicNameLength = _read_uint32(context);
+        PRINTF("mosaic Length: %x", mosaicNameLength);
+        advance_position(context, mosaicNameLength);
         // Show namespace name string
-        add_new_field(context, NEM_STR_NAMESPACE, STI_STR, mosaicNameLength, read_data(context, mosaicNameLength));
+        // add_new_field(context, NEM_STR_NAMESPACE, STI_STR, mosaicNameLength, read_data(context, mosaicNameLength));
         // Show levy fee
-        add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), read_data(context, sizeof(uint64_t)));
+        // add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), read_data(context, sizeof(uint64_t)));
+        advance_position(context, sizeof(uint64_t));
     }
     mosaic_definition_sink_t *sink = (mosaic_definition_sink_t*) read_data(context, MOSAIC_DEFINITION_SINK_HEADER_LENGTH);
     // Show sink address
@@ -395,7 +402,7 @@ void parse_txn_detail(parse_context_t *context, common_txn_header *txn) {
     context->result.numFields = 0;
     PRINTF("%x\n%x", txn->transactionType, txn->fee);
     for(uint8_t i =0; i < 20; i++) {
-    PRINTF("%02x", *(&context->data + context->offset + i));
+        PRINTF("%02x", *(&context->data + context->offset + i));
     }
     // Show Transaction type
     add_new_field(context, NEM_UINT32_TRANSACTION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &txn->transactionType);
@@ -404,12 +411,17 @@ void parse_txn_detail(parse_context_t *context, common_txn_header *txn) {
         case NEM_TXN_TRANSFER:
             parse_transfer_txn_content(context, txn);
             break;
-        case NEM_TXN_PROVISION_NAMESPACE:
-            PRINTF("provision namespace\n");
-            parse_provision_namespace_txn_content(context, txn);
-            break;
         case NEM_TXN_IMPORTANCE_TRANSFER:
             parse_importance_tranfer_txn_content(context, txn);
+            break;
+        case NEM_TXN_MULTISIG_SIGNATURE:
+            parse_multisig_signature_txn_context(context, txn);
+            break;
+        case NEM_TXN_PROVISION_NAMESPACE:
+            parse_provision_namespace_txn_content(context, txn);
+            break;
+        case NEM_TXN_MOSAIC_DEFINITION:
+            parse_mosaic_definition_creation_txn_content(context, txn);
             break;
         default:
             // Mask real cause behind generic error (INCORRECT_DATA)
@@ -450,7 +462,6 @@ common_txn_header *parse_common_txn_header(parse_context_t *context) {
 void parse_txn_internal(parse_context_t *context) {
     common_txn_header* txn = parse_common_txn_header(context);
     parse_txn_detail(context, txn);
-    set_sign_data_length(context);
 }
 
 void parse_txn_context(parse_context_t *context) {
