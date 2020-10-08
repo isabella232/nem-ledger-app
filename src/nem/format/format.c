@@ -106,6 +106,7 @@ void uint32_formatter(field_t* field, char *dst) {
             CASE_FIELDVALUE(NEM_TXN_AGGREGATE_COMPLETE, "Aggregate Complete")
             CASE_FIELDVALUE(NEM_TXN_AGGREGATE_BONDED, "Aggregate Bonded")
             CASE_FIELDVALUE(NEM_TXN_HASH_LOCK, "Hash Lock")
+            CASE_FIELDVALUE(NEM_TXN_IMPORTANCE_TRANSFER, "Importance Transfer")
             default:
                 SNPRINTF(dst, "%s", "Unknown");
         }

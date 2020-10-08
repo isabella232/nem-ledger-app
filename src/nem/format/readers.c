@@ -99,7 +99,6 @@ uint16_t sprintf_token(char* dst, uint16_t len, uint64_t amount, uint8_t divisib
     }
 }
 
-
 uint16_t sprintf_hex(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength, uint8_t reverse) {
     if (2 * dataLength > maxLen - 1) {
         THROW(EXCEPTION_OVERFLOW);

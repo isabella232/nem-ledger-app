@@ -32,8 +32,8 @@ typedef struct {
 typedef struct {
     uint32_t importanceMode;
     uint32_t publicKeyLength;
-    uint8_t publicKey[32];
-} importance_tranfer_header_t;
+    uint8_t publicKey[NEM_PUBLIC_KEY_LENGTH];
+} importance_txn_header_t;
 
 #define AGGREGATE_MODIFICATION_HEADER_LENGTH    44
 typedef struct {
@@ -234,11 +234,10 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header *com
         }
     }
 
-
 }
 
 void parse_importance_tranfer_txn_content(parse_context_t *context, common_txn_header *common_tx_part) {
-    importance_tranfer_header_t *txn = (importance_tranfer_header_t*) read_data(context, IMPORTANCE_TRANSFER_TXN_HEADER_LENGTH);
+    importance_txn_header_t *txn = (importance_txn_header_t*) read_data(context, IMPORTANCE_TRANSFER_TXN_HEADER_LENGTH);
     //  Show importance transfer mode
     add_new_field(context, NEM_UINT8_AA_TYPE, STI_UINT8, sizeof(uint8_t), (uint8_t*) &txn->importanceMode);
     // Show public key of remote account
@@ -405,9 +404,12 @@ void parse_txn_detail(parse_context_t *context, common_txn_header *txn) {
         case NEM_TXN_TRANSFER:
             parse_transfer_txn_content(context, txn);
             break;
-        case NEN_TXN_PROVISION_NAMESPACE:
+        case NEM_TXN_PROVISION_NAMESPACE:
             PRINTF("provision namespace\n");
             parse_provision_namespace_txn_content(context, txn);
+            break;
+        case NEM_TXN_IMPORTANCE_TRANSFER:
+            parse_importance_tranfer_txn_content(context, txn);
             break;
         default:
             // Mask real cause behind generic error (INCORRECT_DATA)
