@@ -169,13 +169,13 @@ uint8_t _read_uint8(parse_context_t *context) {
     return read_uint8(read_data(context, sizeof(uint8_t)));
 }
 
-// void advance_position(parse_context_t *context, uint32_t numBytes) {
-//     if (has_data(context, numBytes)) {
-//         context->offset += numBytes;
-//     } else {
-//         THROW(EXCEPTION_OVERFLOW);
-//     }
-// }
+void advance_position(parse_context_t *context, uint32_t numBytes) {
+    if (has_data(context, numBytes)) {
+        context->offset += numBytes;
+    } else {
+        THROW(EXCEPTION_OVERFLOW);
+    }
+}
 
 void parse_transfer_txn_content(parse_context_t *context, common_txn_header *common_header) {
     transfer_txn_header_t *txn = (transfer_txn_header_t*) read_data(context, TRANSFER_TXN_HEADER_LENGTH);

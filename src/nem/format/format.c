@@ -142,8 +142,7 @@ void uint64_formatter(field_t* field, char *dst) {
 }
 
 void address_formatter(field_t* field, char *dst) {
-    base32_encode(field->data, NEM_ADDRESS_LENGTH, dst, NEM_PRETTY_ADDRESS_LENGTH);
-    dst[39] = '\0';
+    sprintf_ascii(dst, MAX_FIELD_LEN,field->data, field->length);
 }
 
 void mosaic_formatter(field_t* field, char *dst) {
