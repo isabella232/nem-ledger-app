@@ -95,7 +95,7 @@ def sign_create_mosaic_levy_tx(network_type):
     result = dongle.exchange(bytes(bytearray.fromhex(TXN1)))
     result = dongle.exchange(bytes(bytearray.fromhex(TXN2)))
 
-def sign_multisig_creation(network_type):
+def sign_multisig_transfer_tx(network_type):
     TXN = "04100000010000985560d007200000003e6e6cbac488b8a44bdf5abf27b9e1cc2a6f20d09d550a66b9b36f525ca222eef049020000000000656ed0077400000001010000010000985560d0072000000093ce7f61acd7250f98d9ceeab18281b26fcabbc8845a6749814851626bacbf5150c3000000000000656ed007280000005441353435494341564e45554446554249484f3343454a425356495a37595948464658354c51505440420f000000000000000000"
     result = send_package(network_type, APDU_SIGN_TX, TXN)
 
@@ -110,5 +110,5 @@ sign_transfer_tx(TESTNET)
 # sign_create_namespace_tx(TESTNET)
 # sign_create_mosaic_tx(TESTNET)
 # sign_create_mosaic_levy_tx(TESTNET)
-# sign_multisig_creation(TESTNET)
+# sign_multisig_transfer_tx(TESTNET)
 # sign_multisig_signature_transaction(TESTNET)

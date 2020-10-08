@@ -40,7 +40,7 @@ typedef struct {
     uint32_t cosignatoryModificationLength;
     uint32_t modicationType;
     uint32_t cosignatoryPublicKeyLength;
-    uint8_t cosignatoryPublicKey[32];
+    uint8_t cosignatoryPublicKey[NEM_PUBLIC_KEY_LENGTH];
 } aggregate_modication_header_t;
 
 #define MULTISIG_SIGNATURE_HEADER_LENGTH        84
@@ -75,9 +75,8 @@ typedef struct {
     uint32_t namespaceIdLength;
 } mosaic_definition_creation_t;
 
-#define LEVY_STRUCTURE_HEADER_LENGTH            60
+#define LEVY_STRUCTURE_HEADER_LENGTH            56
 typedef struct {
-    uint32_t structureLength;
     uint32_t feeType;
     uint32_t addressLength;
     uint8_t address[NEM_ADDRESS_LENGTH];
@@ -123,7 +122,7 @@ typedef struct {
     uint8_t publicKey[NEM_PUBLIC_KEY_LENGTH];
     uint64_t fee;
     uint32_t deadline;
-} common_txn_header;
+} common_txn_header_t;
 
 bool has_data(parse_context_t *context, uint32_t numBytes) {
     return context->offset + numBytes - 1 < context->length;
@@ -176,7 +175,7 @@ void advance_position(parse_context_t *context, uint32_t numBytes) {
     }
 }
 
-void parse_transfer_txn_content(parse_context_t *context, common_txn_header *common_header) {
+void parse_transfer_txn_content(parse_context_t *context, common_txn_header_t *common_header) {
     transfer_txn_header_t *txn = (transfer_txn_header_t*) read_data(context, TRANSFER_TXN_HEADER_LENGTH);
     char str[32];
     // Show Recipient address
@@ -235,7 +234,7 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header *com
 
 }
 
-void parse_importance_tranfer_txn_content(parse_context_t *context, common_txn_header *common_tx_part) {
+void parse_importance_tranfer_txn_content(parse_context_t *context, common_txn_header_t *common_tx_part) {
     importance_txn_header_t *txn = (importance_txn_header_t*) read_data(context, IMPORTANCE_TRANSFER_TXN_HEADER_LENGTH);
     //  Show importance transfer mode
     add_new_field(context, NEM_UINT8_AA_TYPE, STI_UINT8, sizeof(uint8_t), (uint8_t*) &txn->importanceMode);
@@ -245,10 +244,11 @@ void parse_importance_tranfer_txn_content(parse_context_t *context, common_txn_h
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_tx_part->fee);
 }
 
-void parse_aggregate_modification_txn_content(parse_context_t *context, common_txn_header *common_header) {
+void parse_aggregate_modification_txn_content(parse_context_t *context, common_txn_header_t *common_header) {
     uint32_t cosignatoriesModificationNum = read_uint32(read_data(context, sizeof(uint32_t)));
     // todo
-    // Add number of cosignatory modification
+    // Show number of cosignatory modification
+    add_new_field(context, NEM_UINT32_AM_COSIGNATORY_NUM, STI_UINT32, sizeof(uint32_t), (uint8_t*) &context->data - 4);
     for (uint32_t i = 0; i < cosignatoriesModificationNum; i++) {
         aggregate_modication_header_t *txn = (aggregate_modication_header_t*) read_data(context, AGGREGATE_MODIFICATION_HEADER_LENGTH);
         //  Show modification type
@@ -265,7 +265,7 @@ void parse_aggregate_modification_txn_content(parse_context_t *context, common_t
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
 }
 
-void parse_multisig_signature_txn_context(parse_context_t *context, common_txn_header *common_tx_part) {
+void parse_multisig_signature_txn_context(parse_context_t *context, common_txn_header_t *common_tx_part) {
     multsig_signature_header_t *txn = (multsig_signature_header_t*) read_data(context, MULTISIG_SIGNATURE_HEADER_LENGTH);
     // Show sha3 hash
     add_new_field(context, NEM_HASH256_AGG_HASH, STI_HASH256, txn->hashLength, (uint8_t*) txn->hash);
@@ -275,35 +275,7 @@ void parse_multisig_signature_txn_context(parse_context_t *context, common_txn_h
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_tx_part->fee);
 }
 
-void parse_inner_txn_content(parse_context_t *context, uint32_t len) {
-    uint32_t totalSize = 0;
-    while (totalSize < len) {
-        // get header first
-        common_txn_header *txn = (common_txn_header*) read_data(context, COMMON_TX_HEADER_LENGTH);
-        context->version = txn->version;
-        totalSize +=  + COMMON_TX_HEADER_LENGTH;
-        // Show Transaction type
-        add_new_field(context, NEM_UINT32_INNER_TRANSACTION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &txn->transactionType);
-        switch (txn->transactionType) {
-            case NEM_TXN_TRANSFER:
-                parse_transfer_txn_content(context, txn);
-                break;
-            default:
-                break;
-        }
-    }
-}
-
-void parse_multisig_txn_context(parse_context_t *context, common_txn_header *common_tx_part) {
-    uint32_t innerTxnLength = read_uint32(read_data(context, sizeof(uint32_t)));
-    if (has_data(context, innerTxnLength)) {
-        parse_inner_txn_content(context, innerTxnLength);
-    } else {
-        THROW(EXCEPTION_OVERFLOW);
-    }
-}
-
-void parse_provision_namespace_txn_content(parse_context_t *context, common_txn_header *common_header) {
+void parse_provision_namespace_txn_content(parse_context_t *context, common_txn_header_t *common_header) {
     provision_namespace_header_t *txn = (provision_namespace_header_t*) read_data(context, PROVISION_NAMESPACE_HEADER_LENGTH);
     PRINTF("read namespace data ok\n");
     PRINTF("address ok\nRentail fee: %x\n", txn->rentailFee);
@@ -323,7 +295,7 @@ void parse_provision_namespace_txn_content(parse_context_t *context, common_txn_
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
 }
 
-void parse_mosaic_definition_creation_txn_content(parse_context_t *context, common_txn_header *common_tx_part) {
+void parse_mosaic_definition_creation_txn_content(parse_context_t *context, common_txn_header_t *common_tx_part) {
     PRINTF("mosaic definition\n");
     mosaic_definition_creation_t *txn = (mosaic_definition_creation_t*) read_data(context, MOSAIC_DEFINITION_CREATION_HEADER_LENGTH);
     PRINTF("namespace id len %d\n", txn->namespaceIdLength);
@@ -352,26 +324,19 @@ void parse_mosaic_definition_creation_txn_content(parse_context_t *context, comm
     }
     // Levy structure length
     uint32_t levyStructureLength = _read_uint32(context);
-    PRINTF("get into levy structure %d\n", levyStructureLength);
     if(levyStructureLength > 0) {
         levy_structure_t *levy = (levy_structure_t*) read_data(context, LEVY_STRUCTURE_HEADER_LENGTH);
         // Show fee type
-        add_new_field(context, NEM_UINT32_LEVY_FEE_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &levy->feeType);
+        add_new_field(context, NEM_UINT32_AM_MODICATION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &levy->feeType);
         // Show recipient address
         add_new_field(context, NEM_STR_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &levy->address);
-        uint32_t namespaceIdLength = _read_uint32(context);
-        PRINTF("namespaceId Length: %x", namespaceIdLength);
         // Show namespace name string
-        advance_position(context, namespaceIdLength);
-        // add_new_field(context, NEM_STR_NAMESPACE, STI_STR, namespaceIdLength, read_data(context, namespaceIdLength));
+        add_new_field(context, NEM_STR_NAMESPACE, STI_STR, levy->namespaceIdLength, read_data(context, levy->namespaceIdLength));
         uint32_t mosaicNameLength = _read_uint32(context);
-        PRINTF("mosaic Length: %x", mosaicNameLength);
-        advance_position(context, mosaicNameLength);
         // Show namespace name string
-        // add_new_field(context, NEM_STR_NAMESPACE, STI_STR, mosaicNameLength, read_data(context, mosaicNameLength));
+        add_new_field(context, NEM_STR_NAMESPACE, STI_STR, mosaicNameLength, read_data(context, mosaicNameLength));
         // Show levy fee
-        // add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), read_data(context, sizeof(uint64_t)));
-        advance_position(context, sizeof(uint64_t));
+        add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), read_data(context, sizeof(uint64_t)));
     }
     mosaic_definition_sink_t *sink = (mosaic_definition_sink_t*) read_data(context, MOSAIC_DEFINITION_SINK_HEADER_LENGTH);
     // Show sink address
@@ -382,7 +347,7 @@ void parse_mosaic_definition_creation_txn_content(parse_context_t *context, comm
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_tx_part->fee);
 }
 
-void parse_mosaic_supply_change_txn_content(parse_context_t *context, common_txn_header *common_tx_part) {
+void parse_mosaic_supply_change_txn_content(parse_context_t *context, common_txn_header_t *common_tx_part) {
     advance_position(context, sizeof(uint32_t));
     uint32_t namespaceIdLength = read_uint32(read_data(context, sizeof(uint32_t)));
     // Show namespace id string
@@ -397,7 +362,54 @@ void parse_mosaic_supply_change_txn_content(parse_context_t *context, common_txn
     add_new_field(context, NEM_UINT64_MSC_AMOUNT, STI_UINT64, sizeof(uint64_t), read_data(context, sizeof(uint64_t)));
 }
 
-void parse_txn_detail(parse_context_t *context, common_txn_header *txn) {
+void parse_inner_txn_content(parse_context_t *context, uint32_t len) {
+    uint32_t totalSize = 0;
+    while (totalSize < len) {
+        uint32_t previousOffset = context->offset;
+        // get header first
+        common_txn_header_t *txn = (common_txn_header_t*) read_data(context, COMMON_TX_HEADER_LENGTH);
+        context->version = txn->version;
+        // Show inner transaction type
+        add_new_field(context, NEM_UINT32_INNER_TRANSACTION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &txn->transactionType);
+        switch (txn->transactionType) {
+            case NEM_TXN_TRANSFER:
+                parse_transfer_txn_content(context, txn);
+                break;
+            case NEM_TXN_IMPORTANCE_TRANSFER:
+                parse_importance_tranfer_txn_content(context, txn);
+                break;
+            case NEM_TXN_MULTISIG_AGGREGATE_MODIFICATION:
+                parse_aggregate_modification_txn_content(context, txn);
+                break;
+            case NEM_TXN_MULTISIG_SIGNATURE:
+                parse_multisig_signature_txn_context(context, txn);
+                break;
+            case NEM_TXN_PROVISION_NAMESPACE:
+                parse_provision_namespace_txn_content(context, txn);
+                break;
+            case NEM_TXN_MOSAIC_DEFINITION:
+                parse_mosaic_definition_creation_txn_content(context, txn);
+                break;
+            case NEM_TXN_MOSAIC_SUPPLY_CHANGE:
+                parse_mosaic_supply_change_txn_content(context, txn);
+                break;
+            default:
+                break;
+        }
+        totalSize = totalSize + context->offset - previousOffset;
+    }
+}
+
+void parse_multisig_txn_context(parse_context_t *context, common_txn_header_t *common_tx_part) {
+    uint32_t innerTxnLength = read_uint32(read_data(context, sizeof(uint32_t)));
+    if (has_data(context, innerTxnLength)) {
+        parse_inner_txn_content(context, innerTxnLength);
+    } else {
+        THROW(EXCEPTION_OVERFLOW);
+    }
+}
+
+void parse_txn_detail(parse_context_t *context, common_txn_header_t *txn) {
     PRINTF("Parse tc detail\n");
     context->result.numFields = 0;
     PRINTF("%x\n%x", txn->transactionType, txn->fee);
@@ -414,14 +426,23 @@ void parse_txn_detail(parse_context_t *context, common_txn_header *txn) {
         case NEM_TXN_IMPORTANCE_TRANSFER:
             parse_importance_tranfer_txn_content(context, txn);
             break;
+        case NEM_TXN_MULTISIG_AGGREGATE_MODIFICATION:
+            parse_aggregate_modification_txn_content(context, txn);
+            break;
         case NEM_TXN_MULTISIG_SIGNATURE:
             parse_multisig_signature_txn_context(context, txn);
+            break;
+        case NEM_TXN_MULTISIG:
+            parse_multisig_txn_context(context, txn);
             break;
         case NEM_TXN_PROVISION_NAMESPACE:
             parse_provision_namespace_txn_content(context, txn);
             break;
         case NEM_TXN_MOSAIC_DEFINITION:
             parse_mosaic_definition_creation_txn_content(context, txn);
+            break;
+        case NEM_TXN_MOSAIC_SUPPLY_CHANGE:
+            parse_mosaic_supply_change_txn_content(context, txn);
             break;
         default:
             // Mask real cause behind generic error (INCORRECT_DATA)
@@ -450,9 +471,9 @@ void set_sign_data_length(parse_context_t *context) {
     }
 }
 
-common_txn_header *parse_common_txn_header(parse_context_t *context) {
+common_txn_header_t *parse_common_txn_header_t(parse_context_t *context) {
     // get gen_hash and transaction_type
-    common_txn_header *txn = (common_txn_header *) read_data(context, COMMON_TX_HEADER_LENGTH);
+    common_txn_header_t *txn = (common_txn_header_t *) read_data(context, COMMON_TX_HEADER_LENGTH);
     // Get the version the transaction
     context->version = txn->version;
     PRINTF("NEM Version %x\n", context->version);
@@ -460,7 +481,7 @@ common_txn_header *parse_common_txn_header(parse_context_t *context) {
 }
 
 void parse_txn_internal(parse_context_t *context) {
-    common_txn_header* txn = parse_common_txn_header(context);
+    common_txn_header_t* txn = parse_common_txn_header_t(context);
     parse_txn_detail(context, txn);
 }
 

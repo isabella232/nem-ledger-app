@@ -201,63 +201,125 @@ delta                                   uint64
 ##  Mosaic definition creation transaction part schema
 5. Mosaic definition creation transaction (Reference: https://nemproject.github.io/#gathering-data-for-the-signature)
 
+```
+Property                                Types                                       Description
+----------------------------------------------------------------------------------------------------------------------
+MosaicDefinitionStructureLength         uint32
+CreatorPublicKeyLength                  unit32
+PublicKey                               32 bytes
+MosaicIdStructureLength                 uint32
+NamespaceIdLength                       uint32
+NamespaceId                             Array(NamespaceIdLength)
+mosaicNameLength                        uint32
+mosaicName                              Array(mosaicNameLength)
+descriptionLength                       uint32
+description                             Array(mosaicNameLength)
+propertyNum                             uint32
+propertyArrayList                       Array(propertyNum, propertyArray)
+LevyStructureLength                     unit32
+LevyStructure       (optional)          Array(LevyStructureLength)                  if LevyStructureLength = 0 this field is omitted
+creationFeeSink'sAddressLength          unit32
+address                                 40 bytes
+Fee                                     uint64
+
+```
+
+Property Array
+```
+Property                                Types                                       Description
+----------------------------------------------------------------------------------------------------------------------
+propertyStructureLength                 uint32
+PropertyNameLength                      uint32
+PropertyName                            Array(PropertyValueLength)
+PropertyValueLength                     uint32
+PropertyValue                           Array(PropertyValueLength)
+```
+
+Levy Structure
+```
+Property                                Types                                       Description
+----------------------------------------------------------------------------------------------------------------------
+LevyStructureLength                     uint32
+FeeType                                 uint32
+RecipientAddressLength                  uint32
+RecipientAddress                        40 bytes
+MosaicIdLength                          uint32
+MosaicId                                Array(MosaicIdLength)
+namespaceIdLength                       uint32
+namespaceId                             Array(namespaceIdLength)
+mosaicNameLength                        uint32
+mosaicName                              Array(mosaicNameLength)
+Levy fee                                uint64
+```
+
+
 Raw data:
 ```
 0140000001000098b8b0640a200000009f96df7e7a639b4034b8bee5b88ab1d640db66eb5a47afe018e320cb130c183df049020000000000c8be640a22010000200000009f96df7e7a639b4034b8bee5b88ab1d640db66eb5a47afe018e320cb130c183d2000000008000000746573745f6e656d100000006d6f736169635f746573745f6e616d65170000007468697320697320746865206465736372697074696f6e04000000150000000c00000064697669736962696c6974790100000034170000000d000000696e697469616c537570706c79020000003235190000000d000000737570706c794d757461626c650400000074727565180000000c0000007472616e7366657261626c6504000000747275654a000000010000002800000054423749423644534a4b57425651454b3750443754574f3636454357354c59365349534d32434a4a0e000000030000006e656d0300000078656d09000000000000002800000054424d4f534149434f443446353445453543444d523233434342474f414d3258534a4252354f4c438096980000000000
 ```
+
+### Parse above transaction
 ```
-01400000
-01000098
-b8b0640a
-20000000
-9f96df7e7a639b4034b8bee5b88ab1d640db66eb5a47afe018e320cb130c183d
-f049020000000000
-c8be640a
+08                                      01400000
+09                                      01000098
+10                                      b8b0640a
+11                                      20000000
+12                                      9f96df7e7a639b4034b8bee5b88ab1d640db66eb5a47afe018e320cb130c183d
+13                                      f049020000000000
+14                                      c8be640a
 
 
-22010000
-20000000
-9f96df7e7a639b4034b8bee5b88ab1d640db66eb5a47afe018e320cb130c183d
-20000000
-08000000
-746573745f6e656d
-10000000
-6d6f736169635f746573745f6e616d65
-17000000
-7468697320697320746865206465736372697074696f6e
+MosaicDefinitionStructureLength         22010000
+CreatorPublicKeyLength                  20000000
+PublicKey                               9f96df7e7a639b4034b8bee5b88ab1d640db66eb5a47afe018e320cb130c183d
+MosaicIdStructureLength                 20000000
+NamespaceIdLength                       08000000
+NamespaceId                             746573745f6e656d
+mosaicNameLength                        10000000
+mosaicName                              6d6f736169635f746573745f6e616d65
+descriptionLength                       17000000
+description                             7468697320697320746865206465736372697074696f6e
 
-04000000
+propertyNum                             04000000
 
-15000000
-0c000000
-64697669736962696c697479
-01000000
-34
+propertyStructureLength                 15000000
+PropertyNameLength                      0c000000
+PropertyName                            64697669736962696c697479
+PropertyValueLength                     01000000
+PropertyValue                           34
 
-17000000
-0d000000
-696e697469616c537570706c79
-02000000
-3235
+propertyStructureLength                 17000000
+PropertyNameLength                      0d000000
+PropertyName                            696e697469616c537570706c79
+PropertyValueLength                     02000000
+PropertyValue                           3235
 
-19000000
-74727565
+propertyStructureLength                 19000000
+PropertyNameLength                      0d000000
+PropertyName                            737570706c794d757461626c65
+PropertyValueLength                     04000000
+PropertyValue                           74727565
 
+propertyStructureLength                 18000000
+PropertyNameLength                      0c000000
+PropertyName                            7472616e7366657261626c65
+PropertyValueLength                     04000000
+PropertyValue                           74727565
 
-4a000000
-01000000
-28000000
-54423749423644534a4b57425651454b3750443754574f3636454357354c59365349534d32434a4a
-0e000000
-03000000
-6e656d
-03000000
-78656d
-0900000000000000
+LevyStructureLength                     4a000000
+FeeType                                 01000000
+RecipientAddressLength                  28000000
+RecipientAddress                        54423749423644534a4b57425651454b3750443754574f3636454357354c59365349534d32434a4a
+MosaicIdStructureLength                 0e000000
+namespaceIdLength                       03000000
+namespaceId                             6e656d
+mosaicNameLength                        03000000
+mosaicName                              78656d
+Levy's fee                              0900000000000000
 
-28000000
-54424d4f534149434f443446353445453543444d523233434342474f414d3258534a4252354f4c43
-8096980000000000
+creationFeeSink'sAddressLength          28000000
+address                                 54424d4f534149434f443446353445453543444d523233434342474f414d3258534a4252354f4c43
+Fee                                     8096980000000000
 ```
 ## Multisig transaction part schema
 6.  Multisig transaction part
