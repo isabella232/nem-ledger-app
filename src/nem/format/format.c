@@ -151,7 +151,7 @@ void mosaic_formatter(field_t* field, char *dst) {
 
 void nem_formatter(field_t* field, char *dst) {
     if (field->dataType == STI_NEM) {
-        nem_print_amount(read_uint64(field->data), 6, "xem", dst);
+        sprintf_token(dst, MAX_FIELD_LEN, read_uint64(field->data),6, "xem");
     }
 }
 
