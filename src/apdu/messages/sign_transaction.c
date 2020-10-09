@@ -55,8 +55,7 @@ void sign_transaction() {
             } else if (transactionContext.algo == CX_KECCAK) {
                 //reverse privateKey
                 uint8_t privateKeyDataR[NEM_PRIVATE_KEY_LENGTH];
-                uint8_t j;
-                for (j=0; j<NEM_PRIVATE_KEY_LENGTH; j++) {
+                for (uint8_t j = 0; j < NEM_PRIVATE_KEY_LENGTH; j++) {
                     privateKeyDataR[j] = privateKeyData[NEM_PRIVATE_KEY_LENGTH - 1 - j];
                 }
                 cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyDataR, NEM_PRIVATE_KEY_LENGTH, &privateKey);
@@ -66,7 +65,7 @@ void sign_transaction() {
             }
             explicit_bzero(privateKeyData, sizeof(privateKeyData));
             io_seproxyhal_io_heartbeat();
-            tx = (uint32_t) cx_eddsa_sign(&privateKey, CX_LAST, CX_SHA512, transactionContext.rawTx,
+            tx = (uint32_t) cx_eddsa_sign(&privateKey, CX_LAST, transactionContext.algo, transactionContext.rawTx,
                                               transactionContext.rawTxLength, NULL, 0, G_io_apdu_buffer,
                                               IO_APDU_BUFFER_SIZE, NULL);
 
