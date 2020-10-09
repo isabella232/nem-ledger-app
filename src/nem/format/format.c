@@ -96,19 +96,28 @@ void uint32_formatter(field_t* field, char *dst) {
         SNPRINTF(dst, "Found %d txs", value);
     } else if (field->id == NEM_UINT32_TRANSACTION_TYPE) {
         switch (value) {
-            CASE_FIELDVALUE(NEM_TXN_TRANSFER, "Transfer")
-            CASE_FIELDVALUE(NEM_TXN_REGISTER_NAMESPACE, "Register Namespace")
-            CASE_FIELDVALUE(NEM_TXN_ADDRESS_ALIAS, "Address Alias")
-            CASE_FIELDVALUE(NEM_TXN_MOSAIC_ALIAS, "Mosaic Alias")
-            CASE_FIELDVALUE(NEM_TXN_MOSAIC_DEFINITION, "Mosaic definition")
+            CASE_FIELDVALUE(NEM_TXN_TRANSFER, "Transfer TX")
+            CASE_FIELDVALUE(NEM_TXN_IMPORTANCE_TRANSFER, "Importance Transfer TX")
+            CASE_FIELDVALUE(NEM_TXN_MULTISIG_AGGREGATE_MODIFICATION, "Modify Multisig Aggregate TX")
+            CASE_FIELDVALUE(NEM_TXN_MULTISIG_SIGNATURE, "Multi Signature TX")
+            CASE_FIELDVALUE(NEM_TXN_MULTISIG, "Multisig TX")
+            CASE_FIELDVALUE(NEM_TXN_PROVISION_NAMESPACE, "Provision Namespace TX")
+            CASE_FIELDVALUE(NEM_TXN_MOSAIC_DEFINITION, "Mosaic Definition TX")
             CASE_FIELDVALUE(NEM_TXN_MOSAIC_SUPPLY_CHANGE, "Mosaic Supply Change")
-            CASE_FIELDVALUE(NEM_TXN_MODIFY_MULTISIG_ACCOUNT, "Modify Multisig Account")
-            CASE_FIELDVALUE(NEM_TXN_AGGREGATE_COMPLETE, "Aggregate Complete")
-            CASE_FIELDVALUE(NEM_TXN_AGGREGATE_BONDED, "Aggregate Bonded")
-            CASE_FIELDVALUE(NEM_TXN_HASH_LOCK, "Hash Lock")
-            CASE_FIELDVALUE(NEM_TXN_IMPORTANCE_TRANSFER, "Importance Transfer")
             default:
                 SNPRINTF(dst, "%s", "Unknown");
+        }
+    } else if (field->id == NEM_UINT32_IT_MODE) {
+        if (value == 1) {
+            SNPRINTF(dst, "%s", "Activate");
+        } else if (value == 2) {
+            SNPRINTF(dst, "%s", "Deactivate");
+        }
+    } else if (field->id == NEM_UINT32_AM_RELATIVE_CHANGE) {
+        if (value == 0) {
+            SNPRINTF(dst, "%s", "Not change");
+        } else {
+            SNPRINTF(dst, "%d", value);
         }
     } else {
         SNPRINTF(dst, "%d", value);

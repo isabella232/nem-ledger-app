@@ -31,6 +31,9 @@ void resolve_fieldname(field_t *field, char* dst) {
             CASE_FIELDNAME(NEM_UINT32_TRANSACTION_TYPE, "Transaction Type")
             CASE_FIELDNAME(NEM_UINT32_INNER_TRANSACTION_TYPE, "Inner TX Type")
             CASE_FIELDNAME(NEM_UINT32_MOSAIC_COUNT, "Mosaics")
+            CASE_FIELDNAME(NEM_UINT32_IT_MODE, "Importance Mode")
+            CASE_FIELDNAME(NEM_UINT32_AM_COSIGNATORY_NUM, "Cosignatory Num")
+            CASE_FIELDNAME(NEM_UINT32_AM_RELATIVE_CHANGE, "Relative Change")
         }
     }
 
@@ -61,8 +64,10 @@ void resolve_fieldname(field_t *field, char* dst) {
 
     if (field->dataType == STI_HASH256) {
         switch (field->id) {
-            CASE_FIELDNAME(NEM_HASH256_AGG_HASH, "Agg. Tx Hash")
+            CASE_FIELDNAME(NEM_HASH256, "SHA3 Tx Hash")
             CASE_FIELDNAME(NEM_HASH256_HL_HASH, "Tx Hash")
+            CASE_FIELDNAME(NEM_PUBLICKEY_IT_REMOTE, "Rmt. Public Key")
+            CASE_FIELDNAME(NEM_PUBLICKEY_AM_COSIGNATORY, "Cosignatory PbK")
         }
     }
 
@@ -70,6 +75,8 @@ void resolve_fieldname(field_t *field, char* dst) {
         switch (field->id) {
             CASE_FIELDNAME(NEM_STR_RECIPIENT_ADDRESS, "Recipient")
             CASE_FIELDNAME(NEM_STR_ADDRESS, "Address")
+            CASE_FIELDNAME(NEM_STR_MULTISIG_ADDRESS, "Multisig Address")
+            CASE_FIELDNAME(NEM_STR_SINK_ADDRESS, "Sink Address")
         }
     }
 
@@ -84,6 +91,7 @@ void resolve_fieldname(field_t *field, char* dst) {
     if (field->dataType == STI_NEM) {
         switch (field->id) {
             CASE_FIELDNAME(NEM_UINT64_TXN_FEE, "Fee")
+            CASE_FIELDNAME(NEM_UINT64_RENTAL_FEE, "Rental Fee")
             CASE_FIELDNAME(NEM_MOSAIC_AMOUNT, "Amount")
         }
     }
@@ -96,8 +104,9 @@ void resolve_fieldname(field_t *field, char* dst) {
 
     if (field->dataType == STI_STR) {
         switch (field->id) {
-            CASE_FIELDNAME(NEM_STR_NAMESPACE, "Namespace ID")
-            CASE_FIELDNAME(NEM_STR_MOSAIC, "Mosaic name")
+            CASE_FIELDNAME(NEM_STR_NAMESPACE, "Namespace")
+            CASE_FIELDNAME(NEM_STR_PARENT_NAMESPACE, "Parent Name")
+            CASE_FIELDNAME(NEM_STR_MOSAIC, "Mosaic Name")
         }
     }
 
