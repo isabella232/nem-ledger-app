@@ -132,6 +132,10 @@ uint16_t sprintf_mosaic(char *dst, uint16_t maxLen, uint8_t *mosaic, uint16_t da
 }
 
 uint64_t read_uint64(uint8_t *src) {
+    return (uint64_t) *((uint64_t *)src);
+}
+
+uint64_t read_uint64_r(uint8_t *src) {
     uint64_t value ;
     value = src[7] ;
     value = (value << 8 ) + src[6] ;
@@ -153,6 +157,10 @@ uint16_t read_uint16(uint8_t *src) {
 }
 
 uint32_t read_uint32(uint8_t *src) {
+    return (uint32_t) *((uint32_t *)src);
+}
+
+uint32_t read_uint32_r(uint8_t *src) {
     return (src[3] << 24) | (src[2] << 16) | (src[1] << 8) | src[0];
 }
 

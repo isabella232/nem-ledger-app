@@ -70,7 +70,7 @@ def verify_address(network_type):
     result = send_package(network_type, APDU_GET_ACCOUNT)
 
 def sign_transfer_tx(network_type):
-    TXN =  "01010000010000989b5cd007200000003e6e6cbac488b8a44bdf5abf27b9e1cc2a6f20d09d550a66b9b36f525ca222eea086010000000000ab6ad007280000005441353435494341564e45554446554249484f3343454a425356495a37595948464658354c51505440420f00000000002000000001000000180000005369676e20746573746e6574207472616e73616374696f6e"
+    TXN =  "01010000010000989b5cd007200000003e6e6cbac488b8a44bdf5abf27b9e1cc2a6f20d09d550a66b9b36f525ca222eea086010000000000ab6ad007280000005441353435494341564e45554446554249484f3343454a425356495a37595948464658354c515054 40420f00000000002000000001000000180000005369676e20746573746e6574207472616e73616374696f6e"
     result = send_package(network_type, APDU_SIGN_TX, TXN)
 
 def sign_importance_transfer_tx(network_type):
@@ -106,12 +106,12 @@ def sign_multisig_signature_transaction(network_type):
     TXN = "02100000010000989c5fd007200000003e6e6cbac488b8a44bdf5abf27b9e1cc2a6f20d09d550a66b9b36f525ca222eef049020000000000ac6dd0072400000020000000d2c70f814fa87b13da000ca42e52085fa233ce0aae718aaefe16c5652d1a6932280000005443453752474f444a354d4c4d354d43564e43495253575445484d4c594545465459355442585142"
     result = send_package(network_type, APDU_SIGN_TX, TXN)
 
-verify_address(TESTNET)
+#verify_address(TESTNET)
 sign_transfer_tx(TESTNET)
-sign_multiple_mosaic_tx(TESTNET)
-sign_importance_transfer_tx(TESTNET)
-# sign_create_namespace_tx(TESTNET)
-# sign_create_mosaic_tx(TESTNET)
-# sign_create_mosaic_levy_tx(TESTNET)
-# sign_multisig_transfer_tx(TESTNET)
-# sign_multisig_signature_transaction(TESTNET)
+#sign_multiple_mosaic_tx(TESTNET)
+#sign_importance_transfer_tx(TESTNET)
+#sign_create_namespace_tx(TESTNET)
+#sign_create_mosaic_tx(TESTNET)
+#sign_create_mosaic_levy_tx(TESTNET)
+#sign_multisig_transfer_tx(TESTNET)
+#sign_multisig_signature_transaction(TESTNET)

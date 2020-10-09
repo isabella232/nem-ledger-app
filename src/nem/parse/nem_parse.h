@@ -19,37 +19,31 @@
 
 #include "limitations.h"
 #include "nem/format/fields.h"
+#include "nem/nem_helpers.h"
 
-// #define PAYLOAD_HEADER_LENGTH                8
-// typedef struct {
-//     uint32_t payloadType;
-//     uint32_t payloadLength;
-// } payload_header_t;
+#define STRUCT_ADDRESS_LENGTH 44
+typedef struct address_t {
+    uint32_t length;
+    uint8_t address[NEM_ADDRESS_LENGTH];
+} address_t;
 
+#define STRUCT_PUBLICKEY_LENGTH 36
+typedef struct publickey_t {
+    uint32_t length;
+    uint8_t publicKey[NEM_PUBLIC_KEY_LENGTH];
+} publickey_t;
 
-#define MOSAIC_HEADER_LENGTH                 12
-typedef struct {
-    uint32_t msStructLen;
-    uint32_t msIdStructLen;
-    uint32_t nsIdLen;
-} mosaic_header_t;
-
-#define DATA_UINT32_HEADER_LENGTH            4
-typedef struct {
-    uint32_t data32;
-} data_uint32_t;
-
-typedef struct {
+typedef struct txn_fee_t {
     uint64_t maxFee;
     uint64_t deadline;
 } txn_fee_t;
 
-typedef struct {
+typedef struct result_t {
     uint8_t numFields;
     field_t fields[MAX_FIELD_COUNT];
 } result_t;
 
-typedef struct {
+typedef struct parse_context_t {
     uint8_t version;
     uint16_t transactionType;
     uint8_t *data;
