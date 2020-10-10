@@ -94,12 +94,12 @@ void uint32_formatter(field_t* field, char *dst) {
     uint32_t value = read_uint32(field->data);
     if (field->id == NEM_UINT32_MOSAIC_COUNT) {
         SNPRINTF(dst, "Found %d txs", value);
-    } else if (field->id == NEM_UINT32_TRANSACTION_TYPE) {
+    } else if (field->id == NEM_UINT32_TRANSACTION_TYPE || field->id == NEM_UINT32_INNER_TRANSACTION_TYPE) {
         switch (value) {
             CASE_FIELDVALUE(NEM_TXN_TRANSFER, "Transfer TX")
             CASE_FIELDVALUE(NEM_TXN_IMPORTANCE_TRANSFER, "Importance Transfer TX")
             CASE_FIELDVALUE(NEM_TXN_MULTISIG_AGGREGATE_MODIFICATION, "Modify Multisig Aggregate TX")
-            CASE_FIELDVALUE(NEM_TXN_MULTISIG_SIGNATURE, "Multi Signature TX")
+            CASE_FIELDVALUE(NEM_TXN_MULTISIG_SIGNATURE, "Multi Sig. TX")
             CASE_FIELDVALUE(NEM_TXN_MULTISIG, "Multisig TX")
             CASE_FIELDVALUE(NEM_TXN_PROVISION_NAMESPACE, "Provision Namespace TX")
             CASE_FIELDVALUE(NEM_TXN_MOSAIC_DEFINITION, "Mosaic Definition TX")
@@ -112,6 +112,12 @@ void uint32_formatter(field_t* field, char *dst) {
             SNPRINTF(dst, "%s", "Activate");
         } else if (value == 2) {
             SNPRINTF(dst, "%s", "Deactivate");
+        }
+    } else if (field->id == NEM_UINT32_AM_MODICATION_TYPE) {
+        if (value == 1) {
+            SNPRINTF(dst, "%s", "Add cosignatory");
+        } else if (value == 2) {
+            SNPRINTF(dst, "%s", "Delete cosign.");
         }
     } else if (field->id == NEM_UINT32_AM_RELATIVE_CHANGE) {
         if (value == 0) {

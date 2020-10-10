@@ -33,6 +33,7 @@ void resolve_fieldname(field_t *field, char* dst) {
             CASE_FIELDNAME(NEM_UINT32_MOSAIC_COUNT, "Mosaics")
             CASE_FIELDNAME(NEM_UINT32_IT_MODE, "Importance Mode")
             CASE_FIELDNAME(NEM_UINT32_AM_COSIGNATORY_NUM, "Cosignatory Num")
+            CASE_FIELDNAME(NEM_UINT32_AM_MODICATION_TYPE, "Mod. Type")
             CASE_FIELDNAME(NEM_UINT32_AM_RELATIVE_CHANGE, "Relative Change")
         }
     }
@@ -99,6 +100,7 @@ void resolve_fieldname(field_t *field, char* dst) {
     if (field->dataType == STI_MESSAGE) {
         switch (field->id) {
             CASE_FIELDNAME(NEM_STR_TXN_MESSAGE, "Message")
+            CASE_FIELDNAME(NEM_STR_ENC_MESSAGE, "Message")
         }
     }
 
