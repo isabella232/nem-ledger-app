@@ -19,10 +19,24 @@
 #include "apdu/global.h"
 #include "nem/format/readers.h"
 
+#pragma pack(push, 1)
+
+#define STRUCT_ADDRESS_LENGTH 44
+typedef struct address_t {
+    uint32_t length;
+    uint8_t address[NEM_ADDRESS_LENGTH];
+} address_t;
+
+#define STRUCT_PUBLICKEY_LENGTH 36
+typedef struct publickey_t {
+    uint32_t length;
+    uint8_t publicKey[NEM_PUBLIC_KEY_LENGTH];
+} publickey_t;
+
 #define TRANSFER_TXN_HEADER_LENGTH           56
 typedef struct transfer_txn_header_t {
-    address_t recipient;
-    uint64_t amount;
+    address_t recipient; //44
+    uint64_t amount; // 8
     uint32_t messageLength;
 } transfer_txn_header_t;
 
@@ -44,7 +58,7 @@ typedef struct aggregate_modication_header_t {
 typedef struct multsig_signature_header_t {
     uint32_t hashObjectLength;
     uint32_t hashLength;
-    uint8_t hash[32];
+    uint8_t hash[NEM_TRANSACTION_HASH_LENGTH];
     address_t msAddress;
 } multsig_signature_header_t;
 
@@ -84,19 +98,24 @@ typedef struct mosaic_definition_sink_t {
 
 typedef struct version_t {
     uint8_t ver;
-    uint16_t reserve;
+    uint8_t reserve[2];
     uint8_t networkType;
 } version_t;
 
 #define COMMON_TX_HEADER_LENGTH             60
 typedef struct common_txn_header_t {
     uint32_t transactionType;
-    uint32_t version;
+    //version_t version;
+    uint8_t version;
+    uint16_t reserve;
+    uint8_t networkType;
     uint32_t timestamp;
     publickey_t publicKey;
     uint64_t fee;
     uint32_t deadline;
 } common_txn_header_t;
+
+#pragma pack(pop)
 
 bool has_data(parse_context_t *context, uint32_t numBytes) {
     return context->offset + numBytes - 1 < context->length;
@@ -126,7 +145,7 @@ uint8_t* read_data(parse_context_t *context, uint32_t numBytes) {
     if (has_data(context, numBytes)) {
         uint32_t offset = context->offset;
         context->offset += numBytes;
-        PRINTF("****************** Move offset: %d->%d (%d)/%d\n", offset, context->offset, numBytes, context->length);
+        PRINTF("******* Read: %d bytes - Move offset: %d->%d/%d\n", numBytes, offset, context->offset, context->length);
         return context->data + offset;
     } else {
         THROW(EXCEPTION_OVERFLOW);
@@ -144,28 +163,34 @@ uint8_t _read_uint8(parse_context_t *context) {
 void move_position(parse_context_t *context, uint32_t numBytes) {
     if (has_data(context, numBytes)) {
         context->offset += numBytes;
+        PRINTF("******* Move: %d bytes - Move offset: %d->%d/%d\n", numBytes, context->offset-numBytes, context->offset, context->length);
     } else {
         THROW(EXCEPTION_OVERFLOW);
     }
 }
 
 uint8_t get_nem_version(common_txn_header_t *common_header) {
-    version_t *version = (version_t*)&common_header->version;
-    return version->ver;
+    // version_t *version = (version_t*)&common_header->version;
+    // return version->ver;
+    // return common_header->version[0];
+    return common_header->version;
 }
 
 void parse_transfer_txn_content(parse_context_t *context, common_txn_header_t *common_header) {
-    transfer_txn_header_t *txn = (transfer_txn_header_t*) read_data(context, TRANSFER_TXN_HEADER_LENGTH);
-    char str[65];
+    transfer_txn_header_t *txn = (transfer_txn_header_t *) read_data(context, TRANSFER_TXN_HEADER_LENGTH);
+    // address_t *recipient  = (address_t *) read_data(context, STRUCT_ADDRESS_LENGTH);
+    char str[32];
     uint8_t *ptr;
     // Show Recipient address
     add_new_field(context, NEM_STR_RECIPIENT_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &txn->recipient.address);
-    sprintf_number(str, 32, txn->amount);
-    PRINTF("Amount = %s xem\n", str);
-    if (txn->messageLength == 0) {
+    uint8_t *pamount = (uint8_t *) &txn->amount; //read_data(context, sizeof(uint64_t));
+    uint32_t messageLength = txn->messageLength; //_read_uint32(context);
+    // sprintf_number(str, 32, txn->amount);
+    PRINTF("sizeof = %d xem\n", sizeof(transfer_txn_header_t));
+    if (messageLength == 0) {
         // empty msg
         add_new_field(context, NEM_STR_TXN_MESSAGE, STI_MESSAGE, 0, NULL);
-    } else if (txn->messageLength > 0) {
+    } else {
         uint32_t payloadType = _read_uint32(context);
         uint32_t payloadLength = _read_uint32(context);
         if (payloadType == 1) {
@@ -177,17 +202,16 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header_t *c
     }
     // Show fee
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
-    uint8_t ver = get_nem_version(common_header);
-    if (ver == 1) { // NEM1
+    if (common_header->version == 1) { // NEM1
         // Show xem amount
-        add_new_field(context, NEM_MOSAIC_AMOUNT, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->amount);
-    } else if (ver == 2) { //NEM2
+        add_new_field(context, NEM_MOSAIC_AMOUNT, STI_NEM, sizeof(uint64_t), (uint8_t*) pamount);
+    } else if (common_header->version == 2) { //NEM2
         // num of mosaic pointer
         ptr = read_data(context, sizeof(uint32_t));
         uint32_t numMosaic = read_uint32(ptr);
         if (numMosaic == 0) {
             // Show xem amount
-            add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->amount);
+            add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) pamount);
         } else {
             // Show sent other mosaic num
             add_new_field(context, NEM_UINT32_MOSAIC_COUNT, STI_UINT32, sizeof(uint32_t), ptr);
@@ -248,7 +272,7 @@ void parse_aggregate_modification_txn_content(parse_context_t *context, common_t
         // Show public key of cosignatory
         add_new_field(context, NEM_PUBLICKEY_AM_COSIGNATORY, STI_HASH256, NEM_PUBLIC_KEY_LENGTH, (uint8_t*) &txn->amPublicKey.publicKey);
     }
-    if (get_nem_version(common_header) == 2) {
+    if (common_header->version == 2) {
         ptr = read_data(context, sizeof(uint32_t));
         uint32_t cosignaturiesModificationStructureLength = read_uint32(ptr);
         if (cosignaturiesModificationStructureLength > 0) {
@@ -446,10 +470,10 @@ void parse_txn_detail(parse_context_t *context, common_txn_header_t *txn) {
 
 common_txn_header_t *parse_common_txn_header_t(parse_context_t *context) {
     // get gen_hash and transaction_type
-    common_txn_header_t *txn = (common_txn_header_t *) read_data(context, COMMON_TX_HEADER_LENGTH);
-    context->version = get_nem_version(txn);
+    common_txn_header_t *common_header = (common_txn_header_t *) read_data(context, sizeof(common_txn_header_t));
+    context->version = common_header->version;
     PRINTF("NEM Version %d\n", context->version);
-    return txn;
+    return common_header;
 }
 
 void parse_txn_internal(parse_context_t *context) {

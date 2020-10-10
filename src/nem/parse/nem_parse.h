@@ -21,23 +21,6 @@
 #include "nem/format/fields.h"
 #include "nem/nem_helpers.h"
 
-#define STRUCT_ADDRESS_LENGTH 44
-typedef struct address_t {
-    uint32_t length;
-    uint8_t address[NEM_ADDRESS_LENGTH];
-} address_t;
-
-#define STRUCT_PUBLICKEY_LENGTH 36
-typedef struct publickey_t {
-    uint32_t length;
-    uint8_t publicKey[NEM_PUBLIC_KEY_LENGTH];
-} publickey_t;
-
-typedef struct txn_fee_t {
-    uint64_t maxFee;
-    uint64_t deadline;
-} txn_fee_t;
-
 typedef struct result_t {
     uint8_t numFields;
     field_t fields[MAX_FIELD_COUNT];
