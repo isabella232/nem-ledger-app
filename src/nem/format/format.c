@@ -167,9 +167,6 @@ void mosaic_formatter(field_t* field, char *dst) {
 
 void nem_formatter(field_t* field, char *dst) {
     if (field->dataType == STI_NEM) {
-        char str[MAX_FIELD_LEN];
-        sprintf_hex(str, MAX_FIELD_LEN, field->data, field->length, 0);
-        PRINTF("hex: %s\n",str);
         sprintf_token(dst, MAX_FIELD_LEN, read_uint64(field->data), 6, "xem");
     }
 }
@@ -185,9 +182,9 @@ void msg_formatter(field_t* field, char *dst) {
         if (field->data[0] == 0xFE) { // hex message
             PRINTF("Hex message\n");
             if (field->length - 1 >= MAX_FIELD_LEN) {
-                sprintf_ascii(dst, MAX_FIELD_LEN, &field->data[1], MAX_FIELD_LEN - 1);
+                sprintf_hex2ascii(dst, MAX_FIELD_LEN, &field->data[1], MAX_FIELD_LEN - 1);
             } else {
-                sprintf_ascii(dst, MAX_FIELD_LEN, &field->data[1], field->length - 1);
+                sprintf_hex2ascii(dst, MAX_FIELD_LEN, &field->data[1], field->length - 1);
             }
         } else {
             PRINTF("Message\n");

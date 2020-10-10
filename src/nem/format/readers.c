@@ -116,12 +116,30 @@ uint16_t sprintf_ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLe
         THROW(EXCEPTION_OVERFLOW);
     }
     char *tmpCh = (char *) src;
-    for (uint8_t j=0; j < dataLength; j++){
+    for (uint16_t j=0; j < dataLength; j++) {
         dst[j] = tmpCh[j];
     }
     dst[dataLength] = '\0';
     return dataLength;
 }
+
+/** Convert 1 hex byte to 2 characters */
+char hex2ascii(uint8_t input){
+    return input > 9 ? (char)(input + 87) : (char)(input + 48);
+}
+
+uint16_t sprintf_hex2ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength) {
+    if (2 * dataLength > maxLen - 1) {
+        THROW(EXCEPTION_OVERFLOW);
+    }
+    for (uint16_t j=0; j < dataLength; j++) {
+        dst[2*j] = hex2ascii((src[j] & 0xf0) >> 4);
+        dst[2*j+1] = hex2ascii(src[j] & 0x0f);
+    }
+    dst[2*dataLength] = '\0';
+    return 2*dataLength;
+}
+
 
 uint16_t sprintf_mosaic(char *dst, uint16_t maxLen, uint8_t *mosaic, uint16_t dataLength) {
     uint16_t mosaicNameLen = dataLength - 8;

@@ -26,6 +26,7 @@ uint16_t sprintf_ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLe
 uint16_t sprintf_number(char *dst, uint16_t maxLen, uint64_t value);
 uint16_t sprintf_mosaic(char *dst, uint16_t maxLen, uint8_t *mosaic, uint16_t dataLength);
 uint16_t sprintf_token(char* dst, uint16_t len, uint64_t amount, uint8_t divisibility, char* token);
+uint16_t sprintf_hex2ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength);
 
 uint64_t read_uint64(uint8_t *src);
 uint16_t read_uint16(uint8_t *src);
