@@ -35,6 +35,7 @@ void resolve_fieldname(field_t *field, char* dst) {
             CASE_FIELDNAME(NEM_UINT32_AM_COSIGNATORY_NUM, "Cosignatory Num")
             CASE_FIELDNAME(NEM_UINT32_AM_MODICATION_TYPE, "Mod. Type")
             CASE_FIELDNAME(NEM_UINT32_AM_RELATIVE_CHANGE, "Relative Change")
+            CASE_FIELDNAME(NEM_UINT32_LEVY_FEE_TYPE, "Levy Fee Type")
         }
     }
 
@@ -78,6 +79,7 @@ void resolve_fieldname(field_t *field, char* dst) {
             CASE_FIELDNAME(NEM_STR_ADDRESS, "Address")
             CASE_FIELDNAME(NEM_STR_MULTISIG_ADDRESS, "Multisig Address")
             CASE_FIELDNAME(NEM_STR_SINK_ADDRESS, "Sink Address")
+            CASE_FIELDNAME(NEM_STR_LEVY_ADDRESS, "Levy Address")
         }
     }
 
@@ -94,6 +96,7 @@ void resolve_fieldname(field_t *field, char* dst) {
             CASE_FIELDNAME(NEM_UINT64_TXN_FEE, "Fee")
             CASE_FIELDNAME(NEM_UINT64_RENTAL_FEE, "Rental Fee")
             CASE_FIELDNAME(NEM_MOSAIC_AMOUNT, "Amount")
+            CASE_FIELDNAME(NEM_UINT64_LEVY_FEE, "Levy Fee")
         }
     }
 
@@ -109,6 +112,7 @@ void resolve_fieldname(field_t *field, char* dst) {
             CASE_FIELDNAME(NEM_STR_NAMESPACE, "Namespace")
             CASE_FIELDNAME(NEM_STR_PARENT_NAMESPACE, "Parent Name")
             CASE_FIELDNAME(NEM_STR_MOSAIC, "Mosaic Name")
+            CASE_FIELDNAME(NEM_STR_DESCRIPTION, "Description")
         }
     }
 

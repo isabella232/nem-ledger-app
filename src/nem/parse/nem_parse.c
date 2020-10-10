@@ -296,14 +296,14 @@ void parse_provision_namespace_txn_content(parse_context_t *context, common_txn_
 void parse_mosaic_definition_creation_txn_content(parse_context_t *context, common_txn_header_t *common_header) {
     mosaic_definition_creation_t *txn = (mosaic_definition_creation_t*) read_data(context, sizeof(mosaic_definition_creation_t));
     uint8_t *ptr;
-    // Show namespace id string
-    add_new_field(context, NEM_STR_NAMESPACE, STI_STR, txn->nsIdLen, read_data(context, txn->nsIdLen));
+    // Show parent namespace id string
+    add_new_field(context, NEM_STR_PARENT_NAMESPACE, STI_STR, txn->nsIdLen, read_data(context, txn->nsIdLen));
     uint32_t len = read_uint32(read_data(context, sizeof(uint32_t)));
     // Show mosaic name string
-    add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, read_data(context, len));
+    add_new_field(context, NEM_STR_MOSAIC, STI_STR, len, read_data(context, len));
     len = read_uint32(read_data(context, sizeof(uint32_t)));
     // Show description string
-    add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, read_data(context, len));
+    add_new_field(context, NEM_STR_DESCRIPTION, STI_STR, len, read_data(context, len));
     uint32_t propertyNum = _read_uint32(context);
     for (uint32_t i = 0; i < propertyNum; i++) {
         // Property structure length
@@ -319,25 +319,25 @@ void parse_mosaic_definition_creation_txn_content(parse_context_t *context, comm
     len = _read_uint32(context);
     if(len > 0) {
         levy_structure_t *levy = (levy_structure_t*) read_data(context, sizeof(levy_structure_t));
-        // Show fee type
-        add_new_field(context, NEM_UINT32_AM_MODICATION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &levy->feeType);
-        // Show recipient address
-        add_new_field(context, NEM_STR_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &levy->lsAddress.address);
-        // Show namespace name string
+        // Show levy namespace name string
         add_new_field(context, NEM_STR_NAMESPACE, STI_STR, levy->nsIdLen, read_data(context, levy->nsIdLen));
         len = _read_uint32(context);
-        // Show namespace name string
-        add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, read_data(context, len));
+        // Show levy mosaic name string
+        add_new_field(context, NEM_STR_MOSAIC, STI_STR, len, read_data(context, len));
+        // Show levy address
+        add_new_field(context, NEM_STR_LEVY_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &levy->lsAddress.address);
         // Show levy fee
-        add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), read_data(context, sizeof(uint64_t)));
+        add_new_field(context, NEM_UINT64_LEVY_FEE, STI_NEM, sizeof(uint64_t), read_data(context, sizeof(uint64_t)));
+        // Show levy fee type
+        add_new_field(context, NEM_UINT32_LEVY_FEE_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &levy->feeType);
     }
     mosaic_definition_sink_t *sink = (mosaic_definition_sink_t*) read_data(context, sizeof(mosaic_definition_sink_t));
     // Show sink address
-    add_new_field(context, NEM_STR_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &sink->mdAddress.address);
-    // Show sink fee
-    add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &sink->fee);
-    // Show fee
+    add_new_field(context, NEM_STR_SINK_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &sink->mdAddress.address);
+    // Show tx fee
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
+    // Show rentail fee
+    add_new_field(context, NEM_UINT64_RENTAL_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &sink->fee);
 }
 
 void parse_mosaic_supply_change_txn_content(parse_context_t *context, common_txn_header_t *common_header) {

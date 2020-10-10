@@ -125,6 +125,12 @@ void uint32_formatter(field_t* field, char *dst) {
         } else {
             SNPRINTF(dst, "%d", value);
         }
+    } else if (field->id == NEM_UINT32_LEVY_FEE_TYPE) {
+        if (value == 1) {
+            SNPRINTF(dst, "%s", "Absolute");
+        } else {
+            SNPRINTF(dst, "%s", "Percentile");
+        }
     } else {
         SNPRINTF(dst, "%d", value);
     }
@@ -145,7 +151,7 @@ void uint64_formatter(field_t* field, char *dst) {
         if (duration == 0) {
             SNPRINTF(dst, "%s", "Unlimited");
         } else {
-            uint8_t day = duration / 5760;
+            uint16_t day = duration / 5760;
             uint8_t hour = (duration % 5760) / 240;
             uint8_t min = (duration % 240) / 4;
             SNPRINTF(dst, "%d%s%d%s%d%s", day, "d ", hour, "h ", min, "m");
