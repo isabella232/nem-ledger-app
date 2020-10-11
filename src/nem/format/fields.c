@@ -58,6 +58,17 @@ void resolve_fieldname(field_t *field, char* dst) {
         }
     }
 
+    if (field->dataType == STI_PROPERTY) {
+        switch (field->id) {
+            case NEM_STR_PROPERTY:
+            {
+                // field->data = len name, name, len value, value (ignore field->length)
+                sprintf_ascii(dst, MAX_FIELDNAME_LEN, field->data + sizeof(uint32_t), read_uint32(field->data));
+                return ;
+            }
+        }
+    }
+
     if (field->dataType == STI_MOSAIC_CURRENCY) {
         switch (field->id) {
             CASE_FIELDNAME(NEM_MOSAIC_AMOUNT, "Amount")

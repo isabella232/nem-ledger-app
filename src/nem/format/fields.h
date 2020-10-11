@@ -36,6 +36,7 @@
 #define STI_MOSAIC_CURRENCY 0xA2
 #define STI_MESSAGE 0xA3
 #define STI_ADDRESS 0xA4
+#define STI_PROPERTY 0xA5
 
 // Small collection of used field IDs
 // INT8 defines
@@ -77,6 +78,7 @@
 #define NEM_STR_ROOT_NAMESPACE 0x98
 #define NEM_STR_DESCRIPTION 0x99
 #define NEM_STR_LEVY_ADDRESS 0x9A
+#define NEM_STR_PROPERTY 0x9B
 
 // Hash defines
 #define NEM_HASH256 0xB0

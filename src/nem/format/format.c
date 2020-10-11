@@ -172,6 +172,19 @@ void string_formatter(field_t* field, char *dst) {
     }
 }
 
+void property_formatter(field_t* field, char *dst) {
+    // field->data = len name, name, len value, value (ignore field->length)
+    // Length of the property name
+    uint32_t nameLen = read_uint32(field->data);
+    // Length of the property name
+    uint32_t valueLen = read_uint32(field->data + sizeof(uint32_t) + nameLen);
+    if (valueLen > MAX_FIELD_LEN) {
+        sprintf_ascii(dst, MAX_FIELD_LEN, field->data + nameLen + 2 * sizeof(uint32_t), MAX_FIELD_LEN - 1);
+    } else {
+        sprintf_ascii(dst, MAX_FIELD_LEN, field->data + nameLen + 2 * sizeof(uint32_t), valueLen);
+    }
+}
+
 field_formatter_t get_formatter(field_t* field) {
     switch (field->dataType) {
         case STI_INT8:
@@ -196,6 +209,8 @@ field_formatter_t get_formatter(field_t* field) {
             return msg_formatter;
         case STI_STR:
             return string_formatter;
+        case STI_PROPERTY:
+            return property_formatter;
         default:
             return NULL;
     }

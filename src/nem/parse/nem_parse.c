@@ -298,6 +298,7 @@ void parse_provision_namespace_txn_content(parse_context_t *context, common_txn_
 }
 
 void parse_mosaic_definition_creation_txn_content(parse_context_t *context, common_txn_header_t *common_header) {
+    uint8_t* ptr;
     mosaic_definition_creation_t *txn = (mosaic_definition_creation_t*) read_data(context, sizeof(mosaic_definition_creation_t));
     // Show namespace id string
     add_new_field(context, NEM_STR_PARENT_NAMESPACE, STI_STR, txn->nsIdLen, read_data(context, txn->nsIdLen));
@@ -309,14 +310,18 @@ void parse_mosaic_definition_creation_txn_content(parse_context_t *context, comm
     add_new_field(context, NEM_STR_DESCRIPTION, STI_STR, len, read_data(context, len));
     uint32_t propertyNum = _read_uint32(context);
     for (uint32_t i = 0; i < propertyNum; i++) {
-        // Property structure length
+        // Length of the property structure
         move_pos(context, sizeof(uint32_t));
-        len = _read_uint32(context);
+        // Length of the property name
+        ptr = read_data(context, sizeof(uint32_t));
+        len = read_uint32(ptr);
         // Show property name string
-        add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, read_data(context, len));
+        move_pos(context, len);
         len = _read_uint32(context);
         // Show property value string
-        add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, read_data(context, len));
+        move_pos(context, len);
+        // data = len name, name, len value, value (ignore length)
+        add_new_field(context, NEM_STR_PROPERTY, STI_PROPERTY, sizeof(uint32_t), ptr);
     }
     // Levy structure length
     len = _read_uint32(context);
