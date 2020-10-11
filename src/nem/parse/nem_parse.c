@@ -278,20 +278,23 @@ void parse_multisig_signature_txn_context(parse_context_t *context, common_txn_h
 
 void parse_provision_namespace_txn_content(parse_context_t *context, common_txn_header_t *common_header) {
     rental_header_t *txn = (rental_header_t*) read_data(context, sizeof(rental_header_t));
-    // Show sink address
-    add_new_field(context, NEM_STR_SINK_ADDRESS, STI_ADDRESS, txn->rAddress.length, (uint8_t*) &txn->rAddress.address);
-    // Show rental fee
-    add_new_field(context, NEM_UINT64_RENTAL_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->rentalFee);
     uint32_t len = _read_uint32(context);
     // New part string
     add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, read_data(context, len));
     len = _read_uint32(context);
-    if (len != -1) {
-        // Parent string
+    if (len == UINT32_MAX) {
+        // Show create new root namespace
+        add_new_field(context, NEM_STR_ROOT_NAMESPACE, STI_STR, 0, NULL);
+    } else {
+        // Show parent namespace string
         add_new_field(context, NEM_STR_PARENT_NAMESPACE, STI_STR, len, read_data(context, len));
     }
+    // Show sink address
+    add_new_field(context, NEM_STR_SINK_ADDRESS, STI_ADDRESS, txn->rAddress.length, (uint8_t*) &txn->rAddress.address);
     // Show fee
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
+    // Show rental fee
+    add_new_field(context, NEM_UINT64_RENTAL_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->rentalFee);
 }
 
 void parse_mosaic_definition_creation_txn_content(parse_context_t *context, common_txn_header_t *common_header) {

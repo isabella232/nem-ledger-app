@@ -161,10 +161,14 @@ void msg_formatter(field_t* field, char *dst) {
 }
 
 void string_formatter(field_t* field, char *dst) {
-    if (field->length > MAX_FIELD_LEN) {
-        sprintf_ascii(dst, MAX_FIELD_LEN, field->data, MAX_FIELD_LEN - 1);
+    if (field->id == NEM_STR_ROOT_NAMESPACE) {
+        SNPRINTF(dst, "%s", "namespace");
     } else {
-        sprintf_ascii(dst, MAX_FIELD_LEN, field->data, field->length);
+        if (field->length > MAX_FIELD_LEN) {
+            sprintf_ascii(dst, MAX_FIELD_LEN, field->data, MAX_FIELD_LEN - 1);
+        } else {
+            sprintf_ascii(dst, MAX_FIELD_LEN, field->data, field->length);
+        }
     }
 }
 

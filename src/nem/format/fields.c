@@ -97,6 +97,7 @@ void resolve_fieldname(field_t *field, char* dst) {
         switch (field->id) {
             CASE_FIELDNAME(NEM_STR_NAMESPACE, "Namespace")
             CASE_FIELDNAME(NEM_STR_PARENT_NAMESPACE, "Parent Name")
+            CASE_FIELDNAME(NEM_STR_ROOT_NAMESPACE, "Create new root")
             CASE_FIELDNAME(NEM_STR_MOSAIC, "Mosaic Name")
             CASE_FIELDNAME(NEM_STR_DESCRIPTION, "Description")
         }
