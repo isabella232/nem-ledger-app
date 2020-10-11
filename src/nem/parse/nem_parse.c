@@ -167,6 +167,10 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header_t *c
     uint8_t *ptr;
     // Show Recipient address
     add_new_field(context, NEM_STR_RECIPIENT_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &txn->recipient.address);
+    if (common_header->version == 1) { // NEM tranfer tx version 1
+        // Show xem amount
+        add_new_field(context, NEM_MOSAIC_AMOUNT, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->amount);
+    }
     if (txn->msgLen == 0) {
         // empty msg
         add_new_field(context, NEM_STR_TXN_MESSAGE, STI_MESSAGE, 0, NULL);
@@ -182,10 +186,7 @@ void parse_transfer_txn_content(parse_context_t *context, common_txn_header_t *c
     }
     // Show fee
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
-    if (common_header->version == 1) { // NEM1
-        // Show xem amount
-        add_new_field(context, NEM_MOSAIC_AMOUNT, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->amount);
-    } else if (common_header->version == 2) { //NEM2
+    if (common_header->version == 2) { //NEM tranfer tx version 2
         // num of mosaic pointer
         ptr = read_data(context, sizeof(uint32_t));
         uint32_t numMosaic = read_uint32(ptr);
@@ -363,6 +364,8 @@ void parse_inner_txn_content(parse_context_t *context, uint32_t len) {
         uint32_t previousOffset = context->offset;
         // get header first
         common_txn_header_t *txn = (common_txn_header_t*) read_data(context, sizeof(common_txn_header_t));
+        // Show multisig fee
+        add_new_field(context, NEM_UINT64_MULTISIG_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->fee);
         // Show inner transaction type
         add_new_field(context, NEM_UINT32_INNER_TRANSACTION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &txn->transactionType);
         switch (txn->transactionType) {

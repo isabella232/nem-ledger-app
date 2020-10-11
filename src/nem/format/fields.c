@@ -82,6 +82,7 @@ void resolve_fieldname(field_t *field, char* dst) {
             CASE_FIELDNAME(NEM_UINT64_RENTAL_FEE, "Rental Fee")
             CASE_FIELDNAME(NEM_MOSAIC_AMOUNT, "Amount")
             CASE_FIELDNAME(NEM_UINT64_LEVY_FEE, "Levy Fee")
+            CASE_FIELDNAME(NEM_UINT64_MULTISIG_FEE, "Multisig Fee")
         }
     }
 
