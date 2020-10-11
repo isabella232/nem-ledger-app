@@ -403,41 +403,74 @@ void parse_inner_txn_content(parse_context_t *context, uint32_t len) {
 void parse_multisig_txn_context(parse_context_t *context, common_txn_header_t *common_header) {
     uint32_t innerTxnLength = _read_uint32(context);
     if (has_data(context, innerTxnLength)) {
-        parse_inner_txn_content(context, innerTxnLength);
+        uint32_t inner_offset = 0;
+        while (inner_offset < innerTxnLength) {
+            uint32_t previousOffset = context->offset;
+            // get header first
+            common_txn_header_t *inner_header = (common_txn_header_t*) read_data(context, sizeof(common_txn_header_t));
+            // Show inner transaction type
+            add_new_field(context, NEM_UINT32_INNER_TRANSACTION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &inner_header->transactionType);
+            switch (inner_header->transactionType) {
+                case NEM_TXN_TRANSFER:
+                    parse_transfer_txn_content(context, inner_header);
+                    break;
+                case NEM_TXN_IMPORTANCE_TRANSFER:
+                    parse_importance_tranfer_txn_content(context, inner_header);
+                    break;
+                case NEM_TXN_MULTISIG_AGGREGATE_MODIFICATION:
+                    parse_aggregate_modification_txn_content(context, inner_header);
+                    break;
+                case NEM_TXN_MULTISIG_SIGNATURE:
+                    parse_multisig_signature_txn_context(context, inner_header);
+                    break;
+                case NEM_TXN_PROVISION_NAMESPACE:
+                    parse_provision_namespace_txn_content(context, inner_header);
+                    break;
+                case NEM_TXN_MOSAIC_DEFINITION:
+                    parse_mosaic_definition_creation_txn_content(context, inner_header);
+                    break;
+                case NEM_TXN_MOSAIC_SUPPLY_CHANGE:
+                    parse_mosaic_supply_change_txn_content(context, inner_header);
+                    break;
+                default:
+                    break;
+            }
+            inner_offset = inner_offset + context->offset - previousOffset;
+        }
     } else {
         THROW(EXCEPTION_OVERFLOW);
     }
 }
 
-void parse_txn_detail(parse_context_t *context, common_txn_header_t *txn) {
-    PRINTF("Parse txn detail: %x\n", txn->transactionType);
+void parse_txn_detail(parse_context_t *context, common_txn_header_t *common_header) {
+    PRINTF("Parse txn detail: %x\n", common_header->transactionType);
     context->result.numFields = 0;
     // Show Transaction type
-    add_new_field(context, NEM_UINT32_TRANSACTION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &txn->transactionType);
-    switch (txn->transactionType) {
+    add_new_field(context, NEM_UINT32_TRANSACTION_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &common_header->transactionType);
+    switch (common_header->transactionType) {
         case NEM_TXN_TRANSFER:
-            parse_transfer_txn_content(context, txn);
+            parse_transfer_txn_content(context, common_header);
             break;
         case NEM_TXN_IMPORTANCE_TRANSFER:
-            parse_importance_tranfer_txn_content(context, txn);
+            parse_importance_tranfer_txn_content(context, common_header);
             break;
         case NEM_TXN_MULTISIG_AGGREGATE_MODIFICATION:
-            parse_aggregate_modification_txn_content(context, txn);
+            parse_aggregate_modification_txn_content(context, common_header);
             break;
         case NEM_TXN_MULTISIG_SIGNATURE:
-            parse_multisig_signature_txn_context(context, txn);
+            parse_multisig_signature_txn_context(context, common_header);
             break;
         case NEM_TXN_MULTISIG:
-            parse_multisig_txn_context(context, txn);
+            parse_multisig_txn_context(context, common_header);
             break;
         case NEM_TXN_PROVISION_NAMESPACE:
-            parse_provision_namespace_txn_content(context, txn);
+            parse_provision_namespace_txn_content(context, common_header);
             break;
         case NEM_TXN_MOSAIC_DEFINITION:
-            parse_mosaic_definition_creation_txn_content(context, txn);
+            parse_mosaic_definition_creation_txn_content(context, common_header);
             break;
         case NEM_TXN_MOSAIC_SUPPLY_CHANGE:
-            parse_mosaic_supply_change_txn_content(context, txn);
+            parse_mosaic_supply_change_txn_content(context, common_header);
             break;
         default:
             // Mask real cause behind generic error (INCORRECT_DATA)
