@@ -81,7 +81,7 @@ typedef struct mosaic_definition_creation_t {
     //Public keyof creator
     publickey_t mdcPublicKey;
     //Length of mosaic id structure
-    uint32_t idStructLength;
+    uint32_t idStructLen;
     //Length of namespace id string
     uint32_t nsIdLen;
 } mosaic_definition_creation_t;
@@ -295,8 +295,7 @@ void parse_provision_namespace_txn_content(parse_context_t *context, common_txn_
 
 void parse_mosaic_definition_creation_txn_content(parse_context_t *context, common_txn_header_t *common_header) {
     mosaic_definition_creation_t *txn = (mosaic_definition_creation_t*) read_data(context, sizeof(mosaic_definition_creation_t));
-    uint8_t *ptr;
-    // Show parent namespace id string
+    // Show namespace id string
     add_new_field(context, NEM_STR_PARENT_NAMESPACE, STI_STR, txn->nsIdLen, read_data(context, txn->nsIdLen));
     uint32_t len = read_uint32(read_data(context, sizeof(uint32_t)));
     // Show mosaic name string
@@ -307,7 +306,7 @@ void parse_mosaic_definition_creation_txn_content(parse_context_t *context, comm
     uint32_t propertyNum = _read_uint32(context);
     for (uint32_t i = 0; i < propertyNum; i++) {
         // Property structure length
-        ptr = read_data(context, sizeof(uint32_t));
+        move_pos(context, sizeof(uint32_t));
         len = _read_uint32(context);
         // Show property name string
         add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, read_data(context, len));
@@ -341,19 +340,19 @@ void parse_mosaic_definition_creation_txn_content(parse_context_t *context, comm
 }
 
 void parse_mosaic_supply_change_txn_content(parse_context_t *context, common_txn_header_t *common_header) {
-    // move offset to 4 bytes
-    move_pos(context, sizeof(uint32_t));
+    //Length of mosaic id structure
     uint32_t len = _read_uint32(context);
+    //Length of namespace id string: 4
+    len = _read_uint32(context);
     // Show namespace id string
     add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, read_data(context, len));
+    //Length of mosaic name string
     len = _read_uint32(context);
     // Show mosaic name string
-    add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, read_data(context, len));
-    len = _read_uint32(context);
-    // Show supply type string
-    add_new_field(context, NEM_UINT32_MSC_TYPE, STI_UINT32, sizeof(uint32_t), read_data(context, sizeof(uint32_t)));
-    // Show delta change
-    add_new_field(context, NEM_UINT64_MSC_AMOUNT, STI_UINT64, sizeof(uint64_t), read_data(context, sizeof(uint64_t)));
+    add_new_field(context, NEM_STR_MOSAIC, STI_STR, len, read_data(context, len));
+    len = sizeof(uint32_t) + sizeof(uint64_t);
+    // supply type and delta change
+    add_new_field(context, NEM_MOSAIC_SUPPLY_DELTA, STI_MOSAIC_CURRENCY, len, read_data(context, len));
     // Show fee
     add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
 }

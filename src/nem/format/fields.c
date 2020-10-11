@@ -17,15 +17,9 @@
 #include "fields.h"
 #include "common.h"
 #include "limitations.h"
+#include "readers.h"
 
 void resolve_fieldname(field_t *field, char* dst) {
-    if (field->dataType == STI_INT8) {
-        switch (field->id) {
-            CASE_FIELDNAME(NEM_INT8_MAM_REMOVAL_DELTA, "Min Removal")
-            CASE_FIELDNAME(NEM_INT8_MAM_APPROVAL_DELTA, "Min Approval")
-        }
-    }
-
     if (field->dataType == STI_UINT32) {
         switch (field->id) {
             CASE_FIELDNAME(NEM_UINT32_TRANSACTION_TYPE, "Transaction Type")
@@ -39,28 +33,9 @@ void resolve_fieldname(field_t *field, char* dst) {
         }
     }
 
-    if (field->dataType == STI_UINT8) {
-        switch (field->id) {
-            CASE_FIELDNAME(NEM_UINT8_TXN_MESSAGE_TYPE, "Message Type")
-            CASE_FIELDNAME(NEM_UINT8_MOSAIC_COUNT, "Mosaics")
-            CASE_FIELDNAME(NEM_UINT8_MSC_ACTION, "Change Direction")
-            CASE_FIELDNAME(NEM_UINT8_NS_REG_TYPE, "Namespace Type")
-            CASE_FIELDNAME(NEM_UINT8_AA_TYPE, "Alias Type")
-            CASE_FIELDNAME(NEM_UINT8_MD_SUPPLY_FLAG, "Supply Change")
-            CASE_FIELDNAME(NEM_UINT8_MD_TRANS_FLAG, "Transferable")
-            CASE_FIELDNAME(NEM_UINT8_MD_RESTRICT_FLAG, "Restriction")
-            CASE_FIELDNAME(NEM_UINT8_MAM_ADD_COUNT, "Address Add Num")
-            CASE_FIELDNAME(NEM_UINT8_MAM_DEL_COUNT, "Address Del Num")
-        }
-    }
-
     if (field->dataType == STI_UINT64) {
         switch (field->id) {
             CASE_FIELDNAME(NEM_UINT64_DURATION, "Duration")
-            CASE_FIELDNAME(NEM_UINT64_PARENTID, "Parent ID")
-            CASE_FIELDNAME(NEM_UINT64_MSC_AMOUNT, "Change Amount")
-            CASE_FIELDNAME(NEM_UINT64_NS_ID, "Namespace ID")
-            CASE_FIELDNAME(NEM_UINT64_MOSAIC_ID, "Mosaic ID")
         }
     }
 
@@ -88,6 +63,16 @@ void resolve_fieldname(field_t *field, char* dst) {
             CASE_FIELDNAME(NEM_MOSAIC_AMOUNT, "Amount")
             CASE_FIELDNAME(NEM_MOSAIC_HL_QUANTITY, "Lock Quantity")
             CASE_FIELDNAME(NEM_MOSAIC_UNITS, "Micro Units")
+            case NEM_MOSAIC_SUPPLY_DELTA:
+            {
+                uint32_t supplyType = read_uint32(field->data);
+                if (supplyType == 1) {
+                    snprintf(dst, MAX_FIELDNAME_LEN, "Create Supply");
+                } else if (supplyType == 2) {
+                    snprintf(dst, MAX_FIELDNAME_LEN, "Delete Supply");
+                }
+                return ;
+            }
         }
     }
 

@@ -23,11 +23,7 @@
 
 // Hardware independent limits
 #define MAX_BIP32_PATH 5
-#define MAX_ENC_INPUT_SIZE 26
 #define MAX_FIELDNAME_LEN 50
-#define MAX_ARRAY_LEN 8
-#define MAX_PATH_COUNT 6
-#define MAX_STEP_COUNT 8
 
 // Hardware dependent limits
 //   Ledger Nano X has 30K RAM

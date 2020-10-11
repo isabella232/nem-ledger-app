@@ -39,55 +39,8 @@ void int8_formatter(field_t* field, char *dst) {
 
 void uint8_formatter(field_t* field, char *dst) {
     uint8_t value = read_uint8(field->data);
-    if (field->id == NEM_UINT8_MOSAIC_COUNT) {
-        SNPRINTF(dst, "Found %d txs", value);
-    } else if (field->id == NEM_UINT8_TXN_MESSAGE_TYPE) {
-        if (value == 0x00) {
-            SNPRINTF(dst, "%s", "Plain text");
-        } else if (value == 0x01) {
-            SNPRINTF(dst, "%s", "Encrypted text");
-        } else if (value == 0xFE) {
-            SNPRINTF(dst, "%s", "Persistent harvesting delegation");
-        }
-    } else if (field->id == NEM_UINT8_AA_TYPE) {
-        if (value == 0) {
-            SNPRINTF(dst, "%s", "Unlink address");
-        } else if (value == 1) {
-            SNPRINTF(dst, "%s", "Link address");
-        }
-    } else if (field->id == NEM_UINT8_NS_REG_TYPE) {
-        if (value == 0) {
-            SNPRINTF(dst, "%s", "Root namespace");
-        } else if (value == 1) {
-            SNPRINTF(dst, "%s", "Sub namespace");
-        }
-    } else if (field->id == NEM_UINT8_MSC_ACTION) {
-        if (value == 0) {
-            SNPRINTF(dst, "%s", "Decrease");
-        } else if (value == 1) {
-            SNPRINTF(dst, "%s", "Increase");
-        }
-    } else if (field->id == NEM_UINT8_MD_SUPPLY_FLAG) {
-        if ((value & 0x01) != 0) {
-            SNPRINTF(dst, "%s", "Yes");
-        } else {
-            SNPRINTF(dst, "%s", "No");
-        }
-    } else if (field->id == NEM_UINT8_MD_TRANS_FLAG) {
-        if ((value & 0x02) != 0) {
-            SNPRINTF(dst, "%s", "Yes");
-        } else {
-            SNPRINTF(dst, "%s", "No");
-        }
-    } else if (field->id == NEM_UINT8_MD_RESTRICT_FLAG) {
-        if ((value & 0x04) != 0) {
-            SNPRINTF(dst, "%s", "Yes");
-        } else {
-            SNPRINTF(dst, "%s", "No");
-        }
-    } else {
-        SNPRINTF(dst, "%d", value);
-    }
+    SNPRINTF(dst, "%d", value);
+
 }
 
 void uint32_formatter(field_t* field, char *dst) {
@@ -156,8 +109,6 @@ void uint64_formatter(field_t* field, char *dst) {
             uint8_t min = (duration % 240) / 4;
             SNPRINTF(dst, "%d%s%d%s%d%s", day, "d ", hour, "h ", min, "m");
         }
-    } else if (field->id == NEM_UINT64_MSC_AMOUNT) {
-        nem_print_amount(read_uint64(field->data), 0, "", dst);
     } else {
         sprintf_hex(dst, MAX_FIELD_LEN, field->data, field->length, 1);
     }
@@ -168,7 +119,13 @@ void address_formatter(field_t* field, char *dst) {
 }
 
 void mosaic_formatter(field_t* field, char *dst) {
-    sprintf_mosaic(dst, MAX_FIELD_LEN, field->data, field->length);
+    if (field->id == NEM_MOSAIC_SUPPLY_DELTA) {
+        //data = supply type + delta
+        sprintf_number(dst, MAX_FIELD_LEN, read_uint64(field->data + sizeof(uint32_t)));
+    } else {
+        //data = mosaic name + amount
+        sprintf_mosaic(dst, MAX_FIELD_LEN, field->data, field->length);
+    }
 }
 
 void nem_formatter(field_t* field, char *dst) {
