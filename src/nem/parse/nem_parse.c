@@ -329,18 +329,20 @@ void parse_mosaic_definition_creation_transaction(parse_context_t *context, comm
     // Levy structure length
     len = _read_uint32(context);  // Read uint32 and security check
     if(len > 0) {
-        levy_structure_t *levy = (levy_structure_t*) read_data(context, sizeof(levy_structure_t)); // Read data and security check
-        // Show levy namespace name string
-        add_new_field(context, NEM_STR_NAMESPACE, STI_STR, levy->nsIdLen, read_data(context, levy->nsIdLen)); // Read data and security check
-        len = _read_uint32(context); // Read uint32 and security check
-        // Show levy mosaic name string
-        add_new_field(context, NEM_STR_MOSAIC, STI_STR, len, read_data(context, len)); // Read data and security check
-        // Show levy address
-        add_new_field(context, NEM_STR_LEVY_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &levy->lsAddress.address);
-        // Show levy fee
-        add_new_field(context, NEM_UINT64_LEVY_FEE, STI_NEM, sizeof(uint64_t), read_data(context, sizeof(uint64_t))); // Read data and security check
-        // Show levy fee type
-        add_new_field(context, NEM_UINT32_LEVY_FEE_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &levy->feeType);
+        if (has_data(context, len)) { // Security check
+            levy_structure_t *levy = (levy_structure_t*) read_data(context, sizeof(levy_structure_t)); // Read data and security check
+            PRINTF("Length levy: %d\n", len);
+            // Show levy mosaic: namespace:mosaic name
+            add_new_field(context, NEM_LEVY_MOSAIC, STI_LEVY, len, (uint8_t *) levy); // Read data and security check
+            // Show levy address
+            add_new_field(context, NEM_STR_LEVY_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &levy->lsAddress.address);
+            // Show levy fee type
+            add_new_field(context, NEM_UINT32_LEVY_FEE_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &levy->feeType);
+            // Show levy fee
+            add_new_field(context, NEM_UINT64_LEVY_FEE, STI_NEM, sizeof(uint64_t), read_data(context, sizeof(uint64_t))); // Read data and security check
+        }  else {
+            THROW(EXCEPTION_OVERFLOW);
+        }
     }
     mosaic_definition_sink_t *sink = (mosaic_definition_sink_t*) read_data(context, sizeof(mosaic_definition_sink_t)); // Read data and security check
     // Show sink address
@@ -374,6 +376,7 @@ void parse_multisig_transaction(parse_context_t *context, common_txn_header_t *c
     // This can be a transfer, an importance transfer or an aggregate modification transaction
     uint32_t innerTxnLength = _read_uint32(context); // Read uint32 and security check
     if (has_data(context, innerTxnLength)) { // Security check
+        add_new_field(context, NEM_UINT64_MULTISIG_FEE, STI_NEM, sizeof(uint32_t), (uint8_t*) &common_header->fee);
         uint32_t innerOffset = 0;
         while (innerOffset < innerTxnLength) {
             uint32_t previousOffset = context->offset;
@@ -392,19 +395,9 @@ void parse_multisig_transaction(parse_context_t *context, common_txn_header_t *c
                 case NEM_TXN_MULTISIG_AGGREGATE_MODIFICATION:
                     parse_aggregate_modification_transaction(context, inner_header);
                     break;
-                // case NEM_TXN_MULTISIG_SIGNATURE:
-                //     parse_multisig_signature_transaction(context, inner_header);
-                //     break;
-                // case NEM_TXN_PROVISION_NAMESPACE:
-                //     parse_provision_namespace_transaction(context, inner_header);
-                //     break;
-                // case NEM_TXN_MOSAIC_DEFINITION:
-                //     parse_mosaic_definition_creation_transaction(context, inner_header);
-                //     break;
-                // case NEM_TXN_MOSAIC_SUPPLY_CHANGE:
-                //     parse_mosaic_supply_change_transaction(context, inner_header);
-                //     break;
                 default:
+                    // Mask real cause behind generic error (INCORRECT_DATA)
+                    THROW(0x6A80);
                     break;
             }
             innerOffset = innerOffset + context->offset - previousOffset;

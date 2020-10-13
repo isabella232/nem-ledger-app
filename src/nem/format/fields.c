@@ -114,6 +114,12 @@ void resolve_fieldname(field_t *field, char* dst) {
         }
     }
 
+    if (field->dataType == STI_LEVY) {
+        switch (field->id) {
+            CASE_FIELDNAME(NEM_LEVY_MOSAIC, "Levy Mosaic")
+        }
+    }
+
     // Default case
     snprintf(dst, MAX_FIELDNAME_LEN, "Unknown Field");
 }

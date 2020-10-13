@@ -117,7 +117,11 @@ uint16_t sprintf_ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLe
     }
     char *tmpCh = (char *) src;
     for (uint16_t j=0; j < dataLength; j++) {
-        dst[j] = tmpCh[j];
+        if (tmpCh[j] < 32 || tmpCh[j] > 126) {
+            dst[j] = '?';
+        } else {
+            dst[j] = tmpCh[j];
+        }
     }
     dst[dataLength] = '\0';
     return dataLength;
@@ -142,6 +146,7 @@ uint16_t sprintf_hex2ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t da
 
 
 uint16_t sprintf_mosaic(char *dst, uint16_t maxLen, uint8_t *mosaic, uint16_t dataLength) {
+    //mosaic = mosaic name + amount (uint64)
     uint16_t mosaicNameLen = dataLength - 8;
     uint16_t len = sprintf_number(dst, maxLen, read_uint64(mosaic + mosaicNameLen));
     strcat(dst, " ");

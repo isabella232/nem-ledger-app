@@ -129,9 +129,21 @@ void mosaic_formatter(field_t* field, char *dst) {
 }
 
 void nem_formatter(field_t* field, char *dst) {
-    if (field->dataType == STI_NEM) {
+    if (field->id == NEM_UINT64_LEVY_FEE) {
+        sprintf_token(dst, MAX_FIELD_LEN, read_uint64(field->data), 6, "micro");
+    } else {
         sprintf_token(dst, MAX_FIELD_LEN, read_uint64(field->data), 6, "xem");
     }
+}
+
+void levy_formatter(field_t* field, char *dst) {
+    if (field->id == NEM_LEVY_MOSAIC) {
+        levy_structure_t *levy = (levy_structure_t*) field->data;
+        sprintf_token(dst, MAX_FIELD_LEN, read_uint64(field->data), 6, "micro");
+    } else {
+        sprintf_token(dst, MAX_FIELD_LEN, read_uint64(field->data), 6, "xem");
+    }
+
 }
 
 void msg_formatter(field_t* field, char *dst) {
@@ -143,14 +155,12 @@ void msg_formatter(field_t* field, char *dst) {
         }
     } else {
         if (field->data[0] == 0xFE) { // hex message
-            PRINTF("Hex message\n");
             if (field->length - 1 >= MAX_FIELD_LEN) {
                 sprintf_hex2ascii(dst, MAX_FIELD_LEN, &field->data[1], MAX_FIELD_LEN - 1);
             } else {
                 sprintf_hex2ascii(dst, MAX_FIELD_LEN, &field->data[1], field->length - 1);
             }
         } else {
-            PRINTF("Message\n");
             if (field->length >= MAX_FIELD_LEN) {
                 sprintf_ascii(dst, MAX_FIELD_LEN, &field->data[0], MAX_FIELD_LEN - 1);
             } else {
@@ -211,6 +221,8 @@ field_formatter_t get_formatter(field_t* field) {
             return string_formatter;
         case STI_PROPERTY:
             return property_formatter;
+        case STI_LEVY:
+            return levy_formatter;
         default:
             return NULL;
     }

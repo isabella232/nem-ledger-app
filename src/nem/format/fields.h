@@ -37,6 +37,7 @@
 #define STI_MESSAGE 0xA3
 #define STI_ADDRESS 0xA4
 #define STI_PROPERTY 0xA5
+#define STI_LEVY 0xA6
 
 // Small collection of used field IDs
 // INT8 defines
@@ -89,6 +90,9 @@
 #define NEM_MOSAIC_AMOUNT 0xD1
 #define NEM_MOSAIC_UNITS 0xD2
 #define NEM_MOSAIC_SUPPLY_DELTA 0xD3
+
+// Misc
+#define NEM_LEVY_MOSAIC 0xF0
 
 typedef struct {
     uint8_t id;
