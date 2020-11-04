@@ -72,9 +72,9 @@ void nem_public_key_and_address(cx_ecfp_public_key_t *inPublicKey, uint8_t inNet
     //step1: add network prefix char
     rawAddress[0] = inNetworkId;   //152:,,,,,
     //step2: add ripemd160 hash
-    os_memmove(rawAddress + 1, buffer2, sizeof(buffer2));
+    memcpy(rawAddress + 1, buffer2, sizeof(buffer2));
     sha_calculation(inAlgo, rawAddress, 21, buffer1, sizeof(buffer1));
     //step3: add checksum
-    os_memmove(rawAddress + 21, buffer1, 4);
+    memcpy(rawAddress + 21, buffer1, 4);
     base32_encode((const uint8_t *) rawAddress, 25, (char *) outAddress, outLen);
 }

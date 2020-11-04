@@ -173,7 +173,7 @@ void handle_packet_content(uint8_t p1, uint8_t p2, uint8_t *workBuffer,
     }
 
     // Append received data to stored transaction data
-    os_memmove(parseContext.data + parseContext.length, workBuffer, dataLength);
+    memcpy(parseContext.data + parseContext.length, workBuffer, dataLength);
     parseContext.length += dataLength;
 
     if (hasMore(p1)) {
