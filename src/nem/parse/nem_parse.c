@@ -126,7 +126,7 @@ static field_t *get_field(parse_context_t *context, int idx) {
     return &context->result.fields[idx];
 }
 
-static int _set_field_data(field_t* field, uint8_t id, uint8_t data_type, uint16_t length, uint8_t* data) {
+static int _set_field_data(field_t* field, uint8_t id, uint8_t data_type, uint16_t length, const uint8_t* data) {
     field->id = id;
     field->dataType = data_type;
     field->length = length;
@@ -134,19 +134,19 @@ static int _set_field_data(field_t* field, uint8_t id, uint8_t data_type, uint16
     return 0;
 }
 
-static int set_field_data(parse_context_t *context, int idx, uint8_t id, uint8_t data_type, uint16_t length, uint8_t* data) {
+static int set_field_data(parse_context_t *context, int idx, uint8_t id, uint8_t data_type, uint16_t length, const uint8_t* data) {
     if (idx >= MAX_FIELD_COUNT) {
         return E_TOO_MANY_FIELDS;
     }
     return _set_field_data(get_field(context, idx), id, data_type, length, data);
 }
 
-static int add_new_field(parse_context_t *context, uint8_t id, uint8_t data_type, uint16_t length, uint8_t* data) {
+static int add_new_field(parse_context_t *context, uint8_t id, uint8_t data_type, uint16_t length, const uint8_t* data) {
     return set_field_data(context, context->result.numFields++, id, data_type, length, data);
 }
 
 // Read data and security check
-static uint8_t* read_data(parse_context_t *context, uint32_t numBytes) {
+static const uint8_t* read_data(parse_context_t *context, uint32_t numBytes) {
     if (has_data(context, numBytes)) { // Security check
         uint32_t offset = context->offset;
         context->offset += numBytes;
@@ -159,7 +159,7 @@ static uint8_t* read_data(parse_context_t *context, uint32_t numBytes) {
 
 // Read uint32 and security check
 static int _read_uint32(parse_context_t *context, uint32_t *result) {
-    uint8_t *p = read_data(context, sizeof(uint32_t));
+    const uint8_t *p = read_data(context, sizeof(uint32_t));
     if (p) {
         *result = read_uint32(p);
         return 0;
@@ -168,14 +168,14 @@ static int _read_uint32(parse_context_t *context, uint32_t *result) {
 }
 
 // Move position and security check
-static uint8_t* move_pos(parse_context_t *context, uint32_t numBytes) {
+static const uint8_t* move_pos(parse_context_t *context, uint32_t numBytes) {
     return read_data(context, numBytes); // Read data and security check
 }
 
 static int parse_transfer_transaction(parse_context_t *context, common_txn_header_t *common_header) {
     transfer_txn_header_t *txn = (transfer_txn_header_t *) read_data(context, sizeof(transfer_txn_header_t)); // Read data and security check
     char str[32];
-    uint8_t *ptr;
+    const uint8_t *ptr;
 
     if (txn == NULL) {
         return E_NOT_ENOUGH_DATA;
@@ -344,7 +344,7 @@ static int parse_provision_namespace_transaction(parse_context_t *context, commo
 }
 
 static int parse_mosaic_definition_creation_transaction(parse_context_t *context, common_txn_header_t *common_header) {
-    uint8_t* ptr;
+    const uint8_t* ptr;
     uint32_t propertyNum;
     uint32_t len;
 
@@ -353,7 +353,7 @@ static int parse_mosaic_definition_creation_transaction(parse_context_t *context
         return E_NOT_ENOUGH_DATA;
     }
     // Show namespace id string
-    uint8_t *namespaceId = read_data(context, txn->nsIdLen);
+    const uint8_t *namespaceId = read_data(context, txn->nsIdLen);
     if (namespaceId == NULL) {
         return E_NOT_ENOUGH_DATA;
     }

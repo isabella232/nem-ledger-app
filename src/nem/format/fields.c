@@ -19,7 +19,7 @@
 #include "limitations.h"
 #include "readers.h"
 
-void resolve_fieldname(field_t *field, char* dst) {
+void resolve_fieldname(const field_t *field, char* dst) {
     if (field->dataType == STI_UINT32) {
         switch (field->id) {
             CASE_FIELDNAME(NEM_UINT32_TRANSACTION_TYPE, "Transaction Type")

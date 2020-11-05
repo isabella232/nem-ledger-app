@@ -91,12 +91,12 @@ typedef struct {
     uint8_t id;
     uint8_t dataType;
     uint16_t length;
-    uint8_t *data;
+    const uint8_t *data;
 } field_t;
 
 // Simple macro for building more readable switch statements
 #define CASE_FIELDNAME(v,src) case v: snprintf(dst, MAX_FIELDNAME_LEN, "%s", src); return;
 
-void resolve_fieldname(field_t *field, char* dst);
+void resolve_fieldname(const field_t *field, char* dst);
 
 #endif //LEDGER_APP_NEM_FIELDS_H

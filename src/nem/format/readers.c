@@ -103,7 +103,7 @@ uint16_t sprintf_token(char* dst, uint16_t len, uint64_t amount, uint8_t divisib
     }
 }
 
-uint16_t sprintf_hex(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength, uint8_t reverse) {
+uint16_t sprintf_hex(char *dst, uint16_t maxLen, const uint8_t *src, uint16_t dataLength, uint8_t reverse) {
     if (2 * dataLength > maxLen - 1) {
         // THROW(EXCEPTION_OVERFLOW);
         // TODO: change prototype to return overflow error
@@ -117,7 +117,7 @@ uint16_t sprintf_hex(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLeng
     return 2*dataLength;
 }
 
-uint16_t snprintf_ascii_ex(char *dst, uint16_t pos, uint16_t maxLen, uint8_t *src, uint16_t dataLength) {
+uint16_t snprintf_ascii_ex(char *dst, uint16_t pos, uint16_t maxLen, const uint8_t *src, uint16_t dataLength) {
     if (dataLength + pos > maxLen - 1) {
         // THROW(EXCEPTION_OVERFLOW);
         // TODO: change prototype to return overflow error
@@ -144,11 +144,11 @@ uint16_t snprintf_ascii_ex(char *dst, uint16_t pos, uint16_t maxLen, uint8_t *sr
     return l + pos;
 }
 
-uint16_t sprintf_ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength) {
+uint16_t sprintf_ascii(char *dst, uint16_t maxLen, const uint8_t *src, uint16_t dataLength) {
     return snprintf_ascii_ex(dst, 0, maxLen, src, dataLength);
 }
 
-uint16_t snprintf_ascii(char *dst, uint16_t pos, uint16_t maxLen, uint8_t *src, uint16_t dataLength) {
+uint16_t snprintf_ascii(char *dst, uint16_t pos, uint16_t maxLen, const uint8_t *src, uint16_t dataLength) {
     if (dataLength + pos > maxLen - 1) {
         // THROW(EXCEPTION_OVERFLOW);
         // TODO: change prototype to return overflow error
@@ -171,7 +171,7 @@ char hex2ascii(uint8_t input){
     return input > 9 ? (char)(input + 87) : (char)(input + 48);
 }
 
-uint16_t sprintf_hex2ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength) {
+uint16_t sprintf_hex2ascii(char *dst, uint16_t maxLen, const uint8_t *src, uint16_t dataLength) {
     if (2 * dataLength > maxLen - 1) {
         // THROW(EXCEPTION_OVERFLOW);
         // TODO: change prototype to return overflow error
@@ -186,7 +186,7 @@ uint16_t sprintf_hex2ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t da
 }
 
 
-uint16_t sprintf_mosaic(char *dst, uint16_t maxLen, uint8_t *mosaic, uint16_t dataLength) {
+uint16_t sprintf_mosaic(char *dst, uint16_t maxLen, const uint8_t *mosaic, uint16_t dataLength) {
     //mosaic = mosaic name + amount (uint64)
     uint16_t mosaicNameLen = dataLength - 8;
     uint16_t len = sprintf_number(dst, maxLen, read_uint64(mosaic + mosaicNameLen));
@@ -195,7 +195,7 @@ uint16_t sprintf_mosaic(char *dst, uint16_t maxLen, uint8_t *mosaic, uint16_t da
     return len+mosaicNameLen;
 }
 
-uint64_t read_uint64(uint8_t *src) {
+uint64_t read_uint64(const uint8_t *src) {
     uint64_t value ;
     value = src[7] ;
     value = (value << 8 ) + src[6] ;
@@ -208,14 +208,14 @@ uint64_t read_uint64(uint8_t *src) {
     return value ;
 }
 
-uint8_t read_uint8(uint8_t *src) {
+uint8_t read_uint8(const uint8_t *src) {
     return (uint8_t) *((uint8_t *)src);
 }
 
-uint16_t read_uint16(uint8_t *src) {
+uint16_t read_uint16(const uint8_t *src) {
     return (uint16_t) *((uint16_t *)src);
 }
 
-uint32_t read_uint32(uint8_t *src) {
+uint32_t read_uint32(const uint8_t *src) {
     return (src[3] << 24) | (src[2] << 16) | (src[1] << 8) | src[0];
 }
