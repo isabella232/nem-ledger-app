@@ -35,6 +35,13 @@ typedef struct parse_context_t {
     uint32_t offset;
 } parse_context_t;
 
-void parse_txn_context(parse_context_t *parseContext);
+enum _parser_error {
+    E_SUCCESS = 0,
+    E_NOT_ENOUGH_DATA = -1,
+    E_INVALID_DATA = -2,
+    E_TOO_MANY_FIELDS = -3,
+};
+
+int parse_txn_context(parse_context_t *parseContext);
 
 #endif //LEDGER_APP_NEM_NEMPARSE_H

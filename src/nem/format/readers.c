@@ -15,8 +15,8 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-#include <os_io_seproxyhal.h>
 #include <string.h>
+#include <stdio.h>
 #include "readers.h"
 
 char int_to_number_char(uint64_t value) {
@@ -35,7 +35,9 @@ uint16_t sprintf_number(char *dst, uint16_t len, uint64_t value) {
         numDigits++;
     }
     if (numDigits > len - 1) {
-        THROW(EXCEPTION_OVERFLOW);
+        return 0;
+        // THROW(EXCEPTION_OVERFLOW);
+        // TODO: change prototype to return overflow error
     }
     base /= 10;
     for (i=0; i<numDigits; i++) {
@@ -69,7 +71,9 @@ uint16_t sprintf_token(char* dst, uint16_t len, uint64_t amount, uint8_t divisib
             }
         }
         if (i >= MAX_FIELD_LEN) {
-            THROW(0x6700);
+            // THROW(0x6700);
+            // TODO: change prototype to return too many fields error
+            return 0;
         }
     }
     // reverse order
@@ -101,10 +105,13 @@ uint16_t sprintf_token(char* dst, uint16_t len, uint64_t amount, uint8_t divisib
 
 uint16_t sprintf_hex(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength, uint8_t reverse) {
     if (2 * dataLength > maxLen - 1) {
-        THROW(EXCEPTION_OVERFLOW);
+        // THROW(EXCEPTION_OVERFLOW);
+        // TODO: change prototype to return overflow error
+        return 0;
     }
     for (uint16_t i = 0; i < dataLength; i++) {
-        SPRINTF(dst + 2 * i, "%02X", reverse==1?src[dataLength-1-i]:src[i]);
+        // SPRINTF(dst + 2 * i, "%02X", reverse==1?src[dataLength-1-i]:src[i]);
+        snprintf(dst + 2 * i, maxLen - 2 * i, "%02X", reverse==1?src[dataLength-1-i]:src[i]);
     }
     dst[2*dataLength] = '\0';
     return 2*dataLength;
@@ -112,7 +119,9 @@ uint16_t sprintf_hex(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLeng
 
 uint16_t snprintf_ascii_ex(char *dst, uint16_t pos, uint16_t maxLen, uint8_t *src, uint16_t dataLength) {
     if (dataLength + pos > maxLen - 1) {
-        THROW(EXCEPTION_OVERFLOW);
+        // THROW(EXCEPTION_OVERFLOW);
+        // TODO: change prototype to return overflow error
+        return 0;
     }
     char *tmpCh = (char *) src;
     uint16_t k = 0, l = 0;
@@ -141,7 +150,9 @@ uint16_t sprintf_ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLe
 
 uint16_t snprintf_ascii(char *dst, uint16_t pos, uint16_t maxLen, uint8_t *src, uint16_t dataLength) {
     if (dataLength + pos > maxLen - 1) {
-        THROW(EXCEPTION_OVERFLOW);
+        // THROW(EXCEPTION_OVERFLOW);
+        // TODO: change prototype to return overflow error
+        return 0;
     }
     char *tmpCh = (char *) src;
     for (uint16_t j=0; j < dataLength; j++) {
@@ -162,7 +173,9 @@ char hex2ascii(uint8_t input){
 
 uint16_t sprintf_hex2ascii(char *dst, uint16_t maxLen, uint8_t *src, uint16_t dataLength) {
     if (2 * dataLength > maxLen - 1) {
-        THROW(EXCEPTION_OVERFLOW);
+        // THROW(EXCEPTION_OVERFLOW);
+        // TODO: change prototype to return overflow error
+        return 0;
     }
     for (uint16_t j=0; j < dataLength; j++) {
         dst[2*j] = hex2ascii((src[j] & 0xf0) >> 4);

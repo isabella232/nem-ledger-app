@@ -18,7 +18,6 @@
 #define LEDGER_APP_NEM_FIELDS_H
 
 #include <stdint.h>
-#include <os.h>
 #include <string.h>
 
 // Normal field types
