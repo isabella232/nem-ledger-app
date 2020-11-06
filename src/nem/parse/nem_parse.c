@@ -322,6 +322,9 @@ static int parse_multisig_signature_transaction(parse_context_t *context, common
         return E_NOT_ENOUGH_DATA;
     }
     // Show sha3 hash
+    if (txn->hashLen > NEM_TRANSACTION_HASH_LENGTH) {
+        return E_INVALID_DATA;
+    }
     BAIL_IF(add_new_field(context, NEM_HASH256, STI_HASH256, txn->hashLen, (uint8_t*) &txn->hash));
     // Show multisig address
     BAIL_IF(add_new_field(context, NEM_STR_MULTISIG_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &txn->msAddress.address));
