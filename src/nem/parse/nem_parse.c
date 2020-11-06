@@ -248,6 +248,9 @@ static int parse_transfer_transaction(parse_context_t *context, common_txn_heade
                 uint32_t mosaicNameLen;
                 BAIL_IF(_read_uint32(context, &mosaicNameLen))
                 // mosaic name and quantity
+                if (mosaicNameLen > UINT32_MAX - sizeof(uint64_t)) {
+                    return E_INVALID_DATA;
+                }                
                 ptr = read_data(context, mosaicNameLen + sizeof(uint64_t)); // Read data and security check
                 if (ptr == NULL) {
                     return E_NOT_ENOUGH_DATA;
