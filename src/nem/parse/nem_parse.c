@@ -366,6 +366,9 @@ static int parse_provision_namespace_transaction(parse_context_t *context, commo
         BAIL_IF(add_new_field(context, NEM_STR_PARENT_NAMESPACE, STI_STR, len, ptr)); // Read data and security check
     }
     // Show sink address
+    if (txn->rAddress.length > NEM_ADDRESS_LENGTH) {
+        return E_INVALID_DATA;
+    }
     BAIL_IF(add_new_field(context, NEM_STR_SINK_ADDRESS, STI_ADDRESS, txn->rAddress.length, (uint8_t*) &txn->rAddress.address));
     // Show rental fee
     BAIL_IF(add_new_field(context, NEM_UINT64_RENTAL_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->rentalFee));
