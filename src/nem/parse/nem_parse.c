@@ -200,28 +200,37 @@ static int parse_transfer_transaction(parse_context_t *context, common_txn_heade
         }
         if (payloadType == 1) {
             // Show Message
-            add_new_field(context, NEM_STR_TXN_MESSAGE, STI_MESSAGE, payloadLength, read_data(context, payloadLength)); // Read data and security check
+            ptr = read_data(context, payloadLength);
+            if (ptr == NULL) {
+                return E_NOT_ENOUGH_DATA;
+            }
+            add_new_field(context, NEM_STR_TXN_MESSAGE, STI_MESSAGE, payloadLength, ptr); // Read data and security check
         } else { //show <encrypted msg>
             add_new_field(context, NEM_STR_ENC_MESSAGE, STI_MESSAGE, 0, NULL);
         }
     }
     // Show fee
-    add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
+    BAIL_IF(add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee));
     if (common_header->version == 2) { //NEM tranfer tx version 2
         // num of mosaic pointer
         uint32_t numMosaic;
         BAIL_IF(_read_uint32(context, &numMosaic));
         if (numMosaic == 0) {
             // Show xem amount
-            add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->amount);
+            BAIL_IF(add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->amount));
         } else {
             // Show sent other mosaic num
-            add_new_field(context, NEM_UINT32_MOSAIC_COUNT, STI_UINT32, sizeof(uint32_t), (uint8_t *) &numMosaic);
+            BAIL_IF(add_new_field(context, NEM_UINT32_MOSAIC_COUNT, STI_UINT32, sizeof(uint32_t), (uint8_t *) &numMosaic));
             for (uint32_t i = 0; i < numMosaic; i++) {
                 // mosaic structure length pointer
-                move_pos(context, sizeof(uint32_t)); // Move position and security check
+                if (move_pos(context, sizeof(uint32_t)) == NULL) { // Move position and security check
+                    return E_NOT_ENOUGH_DATA;
+                }
                 // mosaicId structure length pointer
-                move_pos(context, sizeof(uint32_t)); // Move position and security check
+                if (move_pos(context, sizeof(uint32_t)) == NULL) { // Move position and security check
+                    return E_NOT_ENOUGH_DATA;
+                }
+
                 // namespaceID length pointer
                 uint32_t nsIdLen;
                 BAIL_IF(_read_uint32(context, &nsIdLen));
@@ -291,7 +300,9 @@ static int parse_aggregate_modification_transaction(parse_context_t *context, co
         BAIL_IF(_read_uint32(context, &cmLen));
         if (cmLen > 0) {
             // Show relative change in minimum cosignatories modification structure
-            add_new_field(context, NEM_UINT32_AM_RELATIVE_CHANGE, STI_UINT32, sizeof(uint32_t), read_data(context, sizeof(uint32_t))); // Read data and security check
+            uint32_t minCm;
+            BAIL_IF(_read_uint32(context, &minCm));
+            BAIL_IF(add_new_field(context, NEM_UINT32_AM_RELATIVE_CHANGE, STI_UINT32, sizeof(uint32_t), (uint8_t *) &minCm)); // Read data and security check
         } else {
             // Show no minimum cosignatories modification
             add_new_field(context, NEM_UINT32_AM_RELATIVE_CHANGE, STI_UINT32, sizeof(uint32_t), (uint8_t *) &cmLen);
@@ -324,22 +335,33 @@ static int parse_provision_namespace_transaction(parse_context_t *context, commo
         return E_NOT_ENOUGH_DATA;
     }
     BAIL_IF(_read_uint32(context, &len)); // Read uint32 and security check
+    
     // New part string
-    add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, read_data(context, len)); // Read data and security check
+    BAIL_IF(_read_uint32(context, &len));
+    const uint8_t *ptr = read_data(context, len);
+    if (ptr == NULL) {
+        return E_INVALID_DATA;
+    }
+    BAIL_IF(add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, ptr));
+
     BAIL_IF(_read_uint32(context, &len));  // Read uint32 and security check
     if (len == UINT32_MAX) {
         // Show create new root namespace
-        add_new_field(context, NEM_STR_ROOT_NAMESPACE, STI_STR, 0, NULL);
+        BAIL_IF(add_new_field(context, NEM_STR_ROOT_NAMESPACE, STI_STR, 0, NULL));
     } else {
         // Show parent namespace string
-        add_new_field(context, NEM_STR_PARENT_NAMESPACE, STI_STR, len, read_data(context, len)); // Read data and security check
+        ptr = read_data(context, len);
+        if (ptr == NULL) {
+            return E_INVALID_DATA;
+        }
+        BAIL_IF(add_new_field(context, NEM_STR_PARENT_NAMESPACE, STI_STR, len, ptr)); // Read data and security check
     }
     // Show sink address
-    add_new_field(context, NEM_STR_SINK_ADDRESS, STI_ADDRESS, txn->rAddress.length, (uint8_t*) &txn->rAddress.address);
+    BAIL_IF(add_new_field(context, NEM_STR_SINK_ADDRESS, STI_ADDRESS, txn->rAddress.length, (uint8_t*) &txn->rAddress.address));
     // Show rental fee
-    add_new_field(context, NEM_UINT64_RENTAL_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->rentalFee);
+    BAIL_IF(add_new_field(context, NEM_UINT64_RENTAL_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &txn->rentalFee));
     // Show fee./
-    add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
+    BAIL_IF(add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee));
     return 0;
 }
 
@@ -357,14 +379,24 @@ static int parse_mosaic_definition_creation_transaction(parse_context_t *context
     if (namespaceId == NULL) {
         return E_NOT_ENOUGH_DATA;
     }
-    add_new_field(context, NEM_STR_PARENT_NAMESPACE, STI_STR, txn->nsIdLen, namespaceId); // Read data and security check
+    BAIL_IF(add_new_field(context, NEM_STR_PARENT_NAMESPACE, STI_STR, txn->nsIdLen, namespaceId)); // Read data and security check
     
-    BAIL_IF(_read_uint32(context, &len));
     // Show mosaic name string
-    add_new_field(context, NEM_STR_MOSAIC, STI_STR, len, read_data(context, len)); // Read data and security check
     BAIL_IF(_read_uint32(context, &len));
+    ptr = read_data(context, len);
+    if (ptr == NULL) {
+        return E_NOT_ENOUGH_DATA;
+    }
+    BAIL_IF(add_new_field(context, NEM_STR_MOSAIC, STI_STR, len, ptr));
+
     // Show description string
-    add_new_field(context, NEM_STR_DESCRIPTION, STI_STR, len, read_data(context, len)); // Read data and security check
+    BAIL_IF(_read_uint32(context, &len));
+    ptr = read_data(context, len);
+    if (ptr == NULL) {
+        return E_NOT_ENOUGH_DATA;
+    }
+    add_new_field(context, NEM_STR_DESCRIPTION, STI_STR, len, ptr); // Read data and security check
+
     BAIL_IF(_read_uint32(context, &propertyNum)); // Read uint32 and security check
     for (uint32_t i = 0; i < propertyNum; i++) {
         // Length of the property structure
@@ -376,10 +408,14 @@ static int parse_mosaic_definition_creation_transaction(parse_context_t *context
         }
         len = read_uint32(ptr);
         // Show property name string
-        move_pos(context, len); // Move position and security check
+        if (move_pos(context, len) == NULL) { // Move position and security check
+            return E_NOT_ENOUGH_DATA;
+        }
         BAIL_IF(_read_uint32(context, &len)); // Read uint32 and security check
         // Show property value string
-        move_pos(context, len); // Move position and security check
+        if (move_pos(context, len) == NULL) { // Move position and security check
+            return E_NOT_ENOUGH_DATA;
+        }
         // data = len name, name, len value, value (ignore length)
         BAIL_IF(add_new_field(context, NEM_STR_PROPERTY, STI_PROPERTY, sizeof(uint32_t), ptr));
     }
@@ -390,52 +426,89 @@ static int parse_mosaic_definition_creation_transaction(parse_context_t *context
             uint32_t nsid_len;
 
             levy_structure_t *levy = (levy_structure_t*) read_data(context, sizeof(levy_structure_t)); // Read data and security check
+            if (levy == NULL) {
+                return E_NOT_ENOUGH_DATA;
+            }
+
+            ptr = read_data(context, sizeof(uint32_t));
+            if (ptr == NULL) {
+                return E_NOT_ENOUGH_DATA;
+            }
+            ptr += sizeof(uint32_t);
+
             //Length of namespace id string
             BAIL_IF(_read_uint32(context, &nsid_len));
             //namespaceid
-            move_pos(context, nsid_len); // Move position and security check
+            if (move_pos(context, nsid_len) == NULL) { // Move position and security check
+                return E_NOT_ENOUGH_DATA;
+            }
             uint32_t mn_len;
             BAIL_IF(_read_uint32(context, &mn_len)); // Read uint32 and security check
             //mosaic name
-            move_pos(context, mn_len); // Move position and security check
+            if (move_pos(context, mn_len) == NULL) { // Move position and security check
+                return E_NOT_ENOUGH_DATA;
+            };
             // Show levy mosaic: namespace:mosaic name, data=len nemspaceid, nemspaceid, len mosaic name, mosiac name
-            add_new_field(context, NEM_STR_LEVY_MOSAIC, STI_STR, nsid_len + mn_len + 2 * sizeof(uint32_t), (uint8_t *) ptr);
+            BAIL_IF(add_new_field(context, NEM_STR_LEVY_MOSAIC, STI_STR, nsid_len + mn_len + 2 * sizeof(uint32_t), (uint8_t *) ptr));
             // Show levy address
-            add_new_field(context, NEM_STR_LEVY_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &levy->lsAddress.address);
+            BAIL_IF(add_new_field(context, NEM_STR_LEVY_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &levy->lsAddress.address));
             // Show levy fee type
-            add_new_field(context, NEM_UINT32_LEVY_FEE_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &levy->feeType);
+            BAIL_IF(add_new_field(context, NEM_UINT32_LEVY_FEE_TYPE, STI_UINT32, sizeof(uint32_t), (uint8_t*) &levy->feeType));
             // Show levy fee
-            add_new_field(context, NEM_UINT64_LEVY_FEE, STI_NEM, sizeof(uint64_t), read_data(context, sizeof(uint64_t))); // Read data and security check
+            ptr = read_data(context, sizeof(uint64_t));
+            if (ptr == NULL) {
+                return E_NOT_ENOUGH_DATA;
+            }
+            BAIL_IF(add_new_field(context, NEM_UINT64_LEVY_FEE, STI_NEM, sizeof(uint64_t), ptr)); // Read data and security check
         }  else {
             return E_NOT_ENOUGH_DATA;
         }
     }
     mosaic_definition_sink_t *sink = (mosaic_definition_sink_t*) read_data(context, sizeof(mosaic_definition_sink_t)); // Read data and security check
+    if (sink == NULL) {
+        return E_NOT_ENOUGH_DATA;
+    }
     // Show sink address
-    add_new_field(context, NEM_STR_SINK_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &sink->mdAddress.address);
+    BAIL_IF(add_new_field(context, NEM_STR_SINK_ADDRESS, STI_ADDRESS, NEM_ADDRESS_LENGTH, (uint8_t*) &sink->mdAddress.address));
     // Show rentail fee
-    add_new_field(context, NEM_UINT64_RENTAL_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &sink->fee);
+    BAIL_IF(add_new_field(context, NEM_UINT64_RENTAL_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &sink->fee));
     // Show tx fee
-    add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee);
+    BAIL_IF(add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee));
     return 0;
 }
 
 static int parse_mosaic_supply_change_transaction(parse_context_t *context, common_txn_header_t *common_header) {
     uint32_t len;
+    const uint8_t *ptr;
 
     //Length of mosaic id structure
     BAIL_IF(_read_uint32(context, &len)); // Read uint32 and security check
     //Length of namespace id string: 4
     BAIL_IF(_read_uint32(context, &len));  // Read uint32 and security check
     // Show namespace id string
-    BAIL_IF(add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, read_data(context, len))); // Read data and security check
+    ptr = read_data(context, len);
+    if (ptr == NULL) {
+        return E_NOT_ENOUGH_DATA;
+    }
+    BAIL_IF(add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, ptr)); // Read data and security check
     //Length of mosaic name string
     BAIL_IF(_read_uint32(context, &len)); // Read uint32 and security check
+    
     // Show mosaic name string
-    add_new_field(context, NEM_STR_MOSAIC, STI_STR, len, read_data(context, len)); // Read data and security check
+    BAIL_IF(_read_uint32(context, &len));
+    ptr = read_data(context, len);
+    if (ptr == NULL) {
+        return E_NOT_ENOUGH_DATA;
+    }
+    BAIL_IF(add_new_field(context, NEM_STR_MOSAIC, STI_STR, len, ptr));
+
     len = sizeof(uint32_t) + sizeof(uint64_t);
     // supply type and delta change
-    BAIL_IF(add_new_field(context, NEM_MOSAIC_SUPPLY_DELTA, STI_MOSAIC_CURRENCY, len, read_data(context, len))); // Read data and security check
+    ptr = read_data(context, len);
+    if (ptr == NULL) {
+        return E_NOT_ENOUGH_DATA;
+    }
+    BAIL_IF(add_new_field(context, NEM_MOSAIC_SUPPLY_DELTA, STI_MOSAIC_CURRENCY, len, ptr)); // Read data and security check
     // Show fee
     BAIL_IF(add_new_field(context, NEM_UINT64_TXN_FEE, STI_NEM, sizeof(uint64_t), (uint8_t*) &common_header->fee));
     return 0;
@@ -479,7 +552,7 @@ static int parse_multisig_transaction(parse_context_t *context, common_txn_heade
                     parse_provision_namespace_transaction(context, inner_header);
                     break;
                 case NEM_TXN_MOSAIC_DEFINITION:
-                    parse_mosaic_definition_creation_transaction(context, inner_header);
+                    BAIL_IF(parse_mosaic_definition_creation_transaction(context, inner_header));
                     break;
                 case NEM_TXN_MOSAIC_SUPPLY_CHANGE:
                     BAIL_IF(parse_mosaic_supply_change_transaction(context, inner_header));
