@@ -28,16 +28,16 @@ char int_to_number_char(uint64_t value) {
 }
 
 uint16_t sprintf_number(char *dst, uint16_t len, uint64_t value) {
+    // TODO: change prototype to return overflow error
     uint16_t numDigits = 0, i;
     uint64_t base = 1;
     while (base <= value) {
         base *= 10;
         numDigits++;
-    }
-    if (numDigits > len - 1) {
-        return 0;
-        // THROW(EXCEPTION_OVERFLOW);
-        // TODO: change prototype to return overflow error
+
+        if (numDigits > len - 1) {
+            return 0;
+        }
     }
     base /= 10;
     for (i=0; i<numDigits; i++) {
