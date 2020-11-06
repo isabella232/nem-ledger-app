@@ -125,7 +125,7 @@ uint16_t snprintf_ascii_ex(char *dst, uint16_t pos, uint16_t maxLen, const uint8
     }
     char *tmpCh = (char *) src;
     uint16_t k = 0, l = 0;
-    for (uint8_t j=0; j < dataLength; j++){
+    for (uint16_t j=0; j < dataLength; j++){
         if (tmpCh[j] < 32 || tmpCh[j] > 126) {
             k++;
             if (k==1) {
