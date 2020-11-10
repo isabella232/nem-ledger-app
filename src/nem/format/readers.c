@@ -19,33 +19,28 @@
 #include <stdio.h>
 #include "readers.h"
 
-char int_to_number_char(uint64_t value) {
-    if (value > 9) {
-        return '?';
-    }
+int sprintf_number(char *dst, uint16_t len, uint64_t value) {
+    char *p = dst;
 
-    return (char) ('0' + value);
-}
+    // First, compute the address of the last digit to be written.
+    uint64_t shifter = value;
+    do {
+        p++;
+        shifter /= 10;
+    } while (shifter);
 
-uint16_t sprintf_number(char *dst, uint16_t len, uint64_t value) {
-    // TODO: change prototype to return overflow error
-    uint16_t numDigits = 0, i;
-    uint64_t base = 1;
-    while (base <= value) {
-        base *= 10;
-        numDigits++;
+    if (p > dst + len - 1) {
+        return 0;
+    }
+    int n = p - dst;
 
-        if (numDigits > len - 1) {
-            return 0;
-        }
-    }
-    base /= 10;
-    for (i=0; i<numDigits; i++) {
-        dst[i] = int_to_number_char((value / base) % 10);
-        base /= 10;
-    }
-    dst[i] = '\0';
-    return i;
+    // Now write string representation, right to left.
+    *p-- = 0;
+    do {
+        *p-- = '0' + (value % 10);
+        value /= 10;
+    } while (value);
+    return n;
 }
 
 uint16_t sprintf_token(char* dst, uint16_t len, uint64_t amount, uint8_t divisibility, char* token) {
