@@ -187,7 +187,7 @@ uint16_t sprintf_mosaic(char *dst, uint16_t maxLen, const uint8_t *mosaic, uint1
     uint16_t len = sprintf_number(dst, maxLen, read_uint64(mosaic + mosaicNameLen));
     strcat(dst, " ");
     sprintf_ascii(dst+len+1, maxLen-len-1, mosaic, mosaicNameLen);
-    return len+mosaicNameLen;
+    return len + mosaicNameLen + 1;
 }
 
 uint64_t read_uint64(const uint8_t *src) {
