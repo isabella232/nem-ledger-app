@@ -180,13 +180,29 @@ uint16_t sprintf_hex2ascii(char *dst, uint16_t maxLen, const uint8_t *src, uint1
     return 2*dataLength;
 }
 
-
 uint16_t sprintf_mosaic(char *dst, uint16_t maxLen, const uint8_t *mosaic, uint16_t dataLength) {
     //mosaic = mosaic name + amount (uint64)
+    size_t len;
+
+    // Minimum length for sprintf_mosaic: 1 char for amount, 1 space, 1 space for name, 1 null char.
+    if (maxLen < 4) {
+        return 0;
+    }
+
     uint16_t mosaicNameLen = dataLength - 8;
-    uint16_t len = sprintf_number(dst, maxLen, read_uint64(mosaic + mosaicNameLen));
+    if ((len = sprintf_number(dst, maxLen, read_uint64(mosaic + mosaicNameLen))) == 0) {
+        return 0;
+    }
+
+    // Check if dst is big enough to store a space
+    if (len >= maxLen - 1) {
+        return 0;
+    }
     strcat(dst, " ");
-    sprintf_ascii(dst+len+1, maxLen-len-1, mosaic, mosaicNameLen);
+
+    if (sprintf_ascii(dst+len+1, maxLen-len-1, mosaic, mosaicNameLen) == 0) {
+        return 0;
+    }
     return len + mosaicNameLen + 1;
 }
 

@@ -19,7 +19,7 @@
 #define LEDGER_APP_NEM_READERS_H
 
 #include <stdint.h>
-#include "parse/nem_parse.h"
+#include "limitations.h"
 
 uint16_t sprintf_hex(char *dst, uint16_t maxLen, const uint8_t *src, uint16_t dataLength, uint8_t reverse);
 uint16_t sprintf_ascii(char *dst, uint16_t maxLen, const uint8_t *src, uint16_t dataLength);
