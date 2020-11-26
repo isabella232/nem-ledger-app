@@ -249,11 +249,11 @@ static int parse_transfer_transaction(parse_context_t *context, common_txn_heade
                 }
                 // mosaic name length pointer
                 uint32_t mosaicNameLen;
-                BAIL_IF(_read_uint32(context, &mosaicNameLen))
+                BAIL_IF(_read_uint32(context, &mosaicNameLen));
                 // mosaic name and quantity
                 if (mosaicNameLen > UINT32_MAX - sizeof(uint64_t)) {
                     return E_INVALID_DATA;
-                }                
+                }
                 ptr = read_data(context, mosaicNameLen + sizeof(uint64_t)); // Read data and security check
                 if (ptr == NULL) {
                     return E_NOT_ENOUGH_DATA;
@@ -263,8 +263,12 @@ static int parse_transfer_transaction(parse_context_t *context, common_txn_heade
                     // xem quantity
                     BAIL_IF(add_new_field(context, NEM_MOSAIC_AMOUNT, STI_NEM, sizeof(uint64_t), (uint8_t *)(ptr + mosaicNameLen)));
                 } else {
+                    // Unknow mosaic notification
+                    BAIL_IF(add_new_field(context, NEM_MOSAIC_UNKNOWN_TYPE, STI_STR, 0, NULL));
+                    // Show mosaic information: namespace:mosaic name, data=len namespaceId, namespaceId, len mosaic name, mosaic name
+                    BAIL_IF(add_new_field(context, NEM_STR_TRANSFER_MOSAIC, STI_STR, nsIdLen + mosaicNameLen + 2 * sizeof(uint32_t), (uint8_t *)(ptr - (nsIdLen + mosaicNameLen + 2 * sizeof(uint32_t)))));
                     // mosaic name and quantity
-                    BAIL_IF(add_new_field(context, NEM_MOSAIC_UNITS, STI_MOSAIC_CURRENCY, mosaicNameLen + sizeof(uint64_t), ptr));
+                    BAIL_IF(add_new_field(context, NEM_MOSAIC_UNITS, STI_MOSAIC_CURRENCY, sizeof(uint64_t), (uint8_t *)(ptr + mosaicNameLen)));
                 }
             }
         }
@@ -287,7 +291,7 @@ static int parse_importance_transfer_transaction(parse_context_t *context, commo
 }
 
 static int parse_aggregate_modification_transaction(parse_context_t *context, common_txn_header_t *common_header) {
-    uint32_t cmNum;    
+    uint32_t cmNum;
     BAIL_IF(_read_uint32(context, &cmNum));
     // Show number of cosignatory modification
     add_new_field(context, NEM_UINT32_AM_COSIGNATORY_NUM, STI_UINT32, sizeof(uint32_t), (uint8_t *) &cmNum);
@@ -344,7 +348,7 @@ static int parse_provision_namespace_transaction(parse_context_t *context, commo
         return E_NOT_ENOUGH_DATA;
     }
     BAIL_IF(_read_uint32(context, &len)); // Read uint32 and security check
-    
+
     // New part string
     BAIL_IF(_read_uint32(context, &len));
     const uint8_t *ptr = read_data(context, len);
@@ -392,7 +396,7 @@ static int parse_mosaic_definition_creation_transaction(parse_context_t *context
         return E_NOT_ENOUGH_DATA;
     }
     BAIL_IF(add_new_field(context, NEM_STR_PARENT_NAMESPACE, STI_STR, txn->nsIdLen, namespaceId)); // Read data and security check
-    
+
     // Show mosaic name string
     BAIL_IF(_read_uint32(context, &len));
     ptr = read_data(context, len);
@@ -505,7 +509,7 @@ static int parse_mosaic_supply_change_transaction(parse_context_t *context, comm
     BAIL_IF(add_new_field(context, NEM_STR_NAMESPACE, STI_STR, len, ptr)); // Read data and security check
     //Length of mosaic name string
     BAIL_IF(_read_uint32(context, &len)); // Read uint32 and security check
-    
+
     // Show mosaic name string
     BAIL_IF(_read_uint32(context, &len));
     ptr = read_data(context, len);
@@ -530,7 +534,7 @@ static int parse_multisig_transaction(parse_context_t *context, common_txn_heade
     // Length of inner transaction object.
     // This can be a transfer, an importance transfer or an aggregate modification transaction
     uint32_t innerTxnLength;
-    
+
     BAIL_IF(_read_uint32(context, &innerTxnLength)); // Read uint32 and security check
     if (has_data(context, innerTxnLength)) { // Security check
         add_new_field(context, NEM_UINT64_MULTISIG_FEE, STI_NEM, sizeof(uint32_t), (uint8_t*) &common_header->fee);
